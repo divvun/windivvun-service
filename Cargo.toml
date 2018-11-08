@@ -1,0 +1,15 @@
+[package]
+name = "win-spellcheck"
+version = "0.1.0"
+authors = ["Eike Siewertsen <eike@technocreatives.com>"]
+edition = "2018"
+
+[dependencies.com-impl]
+git = "https://github.com/bbqsrc/com-impl-rs"
+
+[dependencies.winapi]
+version = "0.3.6"
+features = ["winerror", "unknwnbase", "objbase", "oleauto", "winerror"]
+
+[build-dependencies.winapi-tlb-bindgen]
+git = "https://github.com/Arnavion/winapi-tlb-bindgen"
