@@ -1,80 +1,65 @@
-#![cfg(windows)] 
-#![feature(integer_atomics)]
+
 
 #[macro_use]
 extern crate winapi;
+extern crate hfstospell;
+
+#[macro_use]
+extern crate log;
+extern crate log4rs;
+extern crate dirs;
+
+//use log::LevelFilter;
+use log4rs::append::file::FileAppender;
+use log4rs::encode::pattern::PatternEncoder;
+use log4rs::config::{Appender, Config, Root};
 
 mod spellcheckprovider;
 
-use winapi::um::objidlbase::IEnumString;
-use winapi::um::winnt::{LPCWSTR, HRESULT};
-use winapi::shared::ntdef::ULONG;
-use winapi::shared::winerror::{S_OK, E_INVALIDARG, E_POINTER};
-use winapi::shared::guiddef::{IsEqualGUID, GUID};
+use winapi::um::shlobj::{SHGetKnownFolderPath, KF_FLAG_DEFAULT};
+use winapi::um::shtypes::{REFKNOWNFOLDERID};
+use winapi::um::combaseapi::{CoTaskMemFree};
+use winapi::shared::winerror::{S_OK};
+use winapi::shared::ntdef::{PWSTR};
+use winapi::um::knownfolders::FOLDERID_Desktop;
 
-use winapi::um::unknwnbase::{IUnknown, IUnknownVtbl};
+use std::ptr;
 
-use std::sync::atomic::{AtomicU32, Ordering};
-
-
-use self::spellcheckprovider::{ISpellCheckProviderFactory, ISpellCheckProviderFactoryVtbl, ISpellCheckProvider, ISpellCheckProviderVtbl};
-
-use com_impl::{ComInterface, interface, implementation};
-
-
-#[interface(ISpellCheckProviderFactory)]
-pub struct DivvunSpellCheckProviderFactory {
-    refs: AtomicU32,
-    variable: u64,
-}
-
-#[implementation(IUnknown)]
-impl DivvunSpellCheckProviderFactory {
-    fn QueryInterface(&mut self, riid: &GUID, obj: &mut usize) -> HRESULT {
-        use winapi::shared::winerror::{E_NOTIMPL, S_OK};
-        use winapi::Interface;
-
-        *obj = 0;
-
-        if IsEqualGUID(riid, &ISpellCheckProviderFactory::uuidof()) || IsEqualGUID(riid, &IUnknown::uuidof()) {
-            *obj = self as *mut _ as usize;
-            self.AddRef();
-            S_OK
-        } else {
-            E_NOTIMPL
-        }
-    }
-
-    fn AddRef(&mut self) -> ULONG {
-        let prev = self.refs.fetch_add(1, Ordering::SeqCst);
-        prev + 1
-    }
-    
-    fn Release(&mut self) -> ULONG {
-        let prev = self.refs.fetch_sub(1, Ordering::SeqCst);
-        if prev == 1 {
-            let _box = unsafe { Box::from_raw(self as *mut _) };
-        }
-        prev - 1
-    }
-}
-
-#[implementation(ISpellCheckProviderFactory)]
-impl DivvunSpellCheckProviderFactory {
-    fn get_SupportedLanguages(value: *mut *mut IEnumString) -> HRESULT {
-        S_OK
-    }
-
-    fn IsSupported(LanguageTag: LPCWSTR, value: *mut i32) -> HRESULT {
-        S_OK
-    }
-
-    fn CreateSpellCheckProvider(LanguageTag: LPCWSTR, value: *mut *mut ISpellCheckProvider) -> HRESULT {
-        S_OK
-    }
-}
-
+// mod impl;
+// mod util;
 
 fn main() {
+    let mut home = dirs::home_dir().unwrap();
+    home.push("divvunlog.txt");
+
+    let logfile = FileAppender::builder()
+        .build(home.clone()).unwrap();
+    
+    let config = Config::builder()
+        .appender(Appender::builder().build("logfile", Box::new(logfile)))
+        .build(Root::builder()
+                   .appender("logfile")
+                   .build(log::LevelFilter::Info)).unwrap();
+    
+    log4rs::init_config(config);
+
+    info!("Hello, world!");
+
     println!("Hello, world!");
+    // unsafe {
+    //     let mut path: PWSTR = ptr::null_mut();
+    //     if SHGetKnownFolderPath(&FOLDERID_Desktop, KF_FLAG_DEFAULT, ptr::null_mut(), &mut path) != S_OK {
+    //         println!("error");
+    //     } else {
+    //         println!("ok");
+    //         let path = String::from_utf16_lossy(&*path);
+    //         println!("path: {}", path);
+    //         CoTaskMemFree(path);
+    //     }
+    // }
+    println!("{}", home.display());
+    // let zhfst = hfstospell::SpellerArchive::new("./se-store.zhfst");
+    // let two = zhfst.speller();
+    // let res = two.suggest("nuvviDspeller");
+
 }

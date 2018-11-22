@@ -8,3 +8,6 @@ C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\spellcheckprovide
 after installing the Windows SDK
 
 C:\Program Files (x86)\Windows Kits\10\bin\10.0.17763.0\x64\midl.exe
+
+
+cargo build has to be run from a command line with the VC++ paths set. If you're getting errors about trying to build a 64bit binary with a 32bit compiler, run vcvars64.bat in "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build"

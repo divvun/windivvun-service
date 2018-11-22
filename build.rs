@@ -1,6 +1,9 @@
 extern crate winapi_tlb_bindgen;
 use std::io::prelude::*;
 
+// E45885BF-50CB-4F8F-9B19-95767EAF0F5C
+
+
 fn main() {
   let out_dir: std::path::PathBuf = std::env::var_os("OUT_DIR").unwrap().into();
 
@@ -14,6 +17,8 @@ fn main() {
 	let idl_out = {
 		let idl_out = out_dir.join("spellcheckprovider.idl");
 		let mut idl_out_file = std::fs::OpenOptions::new().create(true).write(true).truncate(true).open(idl_out.clone()).unwrap();
+		
+		// Don't care about the version and UUID, this is just needed to generate the tlb that tlb_bindgen needs
 		idl_out_file.write_all(b"[
 				uuid(00B573B4-E925-4413-9F57-FAC7FE382719),
 				version(1.0),
