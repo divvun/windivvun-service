@@ -7,8 +7,9 @@ use std::io::prelude::*;
 fn main() {
   let out_dir: std::path::PathBuf = std::env::var_os("OUT_DIR").unwrap().into();
 
+	// TODO: find newest SDK folder here
 	let idl_content = {
-		let mut idl_file = std::fs::File::open(r"C:\Program Files (x86)\Windows Kits\10\Include\10.0.17763.0\um\spellcheckprovider.idl").unwrap();
+		let mut idl_file = std::fs::File::open(r"C:\Program Files (x86)\Windows Kits\10\Include\10.0.10586.0\um\spellcheckprovider.idl").unwrap();
 		let mut idl_content = String::new();
 		idl_file.read_to_string(&mut idl_content).unwrap();
 		idl_content

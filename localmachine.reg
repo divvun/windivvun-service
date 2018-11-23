@@ -8,7 +8,7 @@ Windows Registry Editor Version 5.00
 "AppId"="{E45885BF-50CB-4F8F-9B19-95767EAF0F5C}"
 
 [HKEY_LOCAL_MACHINE\SOFTWARE\Classes\CLSID\{E45885BF-50CB-4F8F-9B19-95767EAF0F5C}\InprocServer32]
-@="Z:\\eike On My Mac\\projects\\divvun\\win-spellcheck\\target\\debug\\winspellcheck.dll"
+@="C:\\Program Files\\SpellCheckTest\\winspellcheck.dll"
 "ThreadingModel"="Both"
 
 [HKEY_LOCAL_MACHINE\SOFTWARE\Classes\CLSID\{E45885BF-50CB-4F8F-9B19-95767EAF0F5C}\Version]

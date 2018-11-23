@@ -2,7 +2,6 @@
 name = "win-spellcheck"
 version = "0.1.0"
 authors = ["Eike Siewertsen <eike@technocreatives.com>"]
-edition = "2018"
 
 [lib]
 name = "winspellcheck"
@@ -20,7 +19,7 @@ git = "https://github.com/bbqsrc/com-impl-rs"
 
 [dependencies.winapi]
 version = "0.3.6"
-features = ["winerror", "unknwnbase", "objbase", "oleauto", "winerror", "shlobj", "shtypes", "combaseapi", "knownfolders"]
+features = ["winerror", "unknwnbase", "objbase", "oleauto", "winerror", "shlobj", "shtypes", "combaseapi", "knownfolders", "winuser"]
 
 [dependencies.hfst-ospell-rs]
 git = "https://github.com/bbqsrc/hfst-ospell-rs"
