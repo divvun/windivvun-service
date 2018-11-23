@@ -1,5 +1,4 @@
 #![cfg(windows)] 
-#![feature(integer_atomics)]
 
 use winapi::um::objidlbase::IEnumString;
 use winapi::um::winnt::{LPCWSTR, HRESULT};
@@ -31,7 +30,7 @@ impl DivvunSpellCheckProviderFactory {
 
         *obj = 0;
 
-        if IsEqualGUID(riid, &self::uuidof()) || IsEqualGUID(riid, &IUnknown::uuidof()) {
+        if IsEqualGUID(riid, &ISpellCheckProviderFactory::uuidof()) || IsEqualGUID(riid, &IUnknown::uuidof()) {
             *obj = self as *mut _ as usize;
             self.AddRef();
             S_OK
