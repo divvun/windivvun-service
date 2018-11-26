@@ -60,7 +60,7 @@ impl DivvunSpellCheckProviderFactory {
 impl DivvunSpellCheckProviderFactory {
     fn get_SupportedLanguages(&mut self, value: *mut *mut IEnumString) -> HRESULT {
         info!("get supported languages");
-        let enum_if = EnumString::new(vec!["en".to_string(), "en-us".to_string(), "sv-se".to_string()]);
+        let enum_if = EnumString::new(vec!["en".to_string(), "en-us".to_string(), "sv".to_string(), "sv-SE".to_string()]);
         unsafe {
             *value = enum_if as *mut _;
         }

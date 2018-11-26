@@ -58,16 +58,6 @@ impl DivvunSpellCheckProvider {
 
 #[implementation(ISpellCheckProvider)]
 impl DivvunSpellCheckProvider {
-  fn new(languageTag: &str, archivePath: &str) {
-    let zhfst = SpellerArchive::new(archivePath);
-    let speller = zhfst.speller();
-    
-    DivvunSpellCheckProvider {
-      languageTag,
-      speller
-    }
-  }
-
   fn get_LanguageTag(&mut self, value: *mut LPCWSTR) -> HRESULT {
     value = languageTag;
   }
@@ -117,5 +107,24 @@ impl DivvunSpellCheckProvider {
   fn InitializeWordlist(&mut self, wordlistType: WORDLIST_TYPE, words: *const IEnumString) -> HRESULT {
     // nope
     // or: keep list of words, check for equalness before invoking speller
+  }
+}
+
+impl DivvunSpellCheckProviderFactory {
+  pub fn new(languageTag: &str) -> *mut DivvunSpellCheckProviderFactory {
+    //, archivePath: &str
+    let zhfst = SpellerArchive::new(archivePath);
+    let speller = zhfst.speller();
+    
+    let s = Self {
+        __vtable: Box::new(Self::create_vtable()),
+        refs: AtomicU32::new(1),
+        languageTag,
+        speller
+    };
+
+    let ptr = Box::into_raw(Box::new(s));
+
+    ptr as *mut _
   }
 }

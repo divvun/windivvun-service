@@ -4,8 +4,7 @@
 extern crate winapi;
 extern crate com_impl;
 // causes unresolved references together with log4rs
-// extern crate hfstospell;
-
+extern crate hfstospell;
 
 #[macro_use]
 extern crate log;
@@ -36,6 +35,8 @@ use std::path::PathBuf;
 use spellcheckprovider::{ISpellCheckProviderFactory};
 use winapi::um::unknwnbase::{IClassFactory};
 use spell_impl::ClassFactory::DivvunSpellCheckProviderFactoryClassFactory;
+
+//mod speller_repository;
 
 // mod util;
 
@@ -111,8 +112,9 @@ pub extern "stdcall" fn DllGetClassObject(rclsid: REFCLSID, riid: REFIID, ppv: *
 
 #[test]
 fn things() {
-    initialize_logging();
-
+    
     info!("Library loaded!");
     test("hello world");
+
+    let rep = speller_repository::SpellerRepository::new(r"C:\Program Files\SpellCheckTest\dicts");
 }
