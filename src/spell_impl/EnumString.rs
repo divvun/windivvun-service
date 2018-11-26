@@ -3,7 +3,7 @@
 use winapi::um::winnt::{LPCWSTR, HRESULT};
 
 use winapi::shared::ntdef::ULONG;
-use winapi::shared::winerror::{S_OK, E_INVALIDARG, E_POINTER, E_NOINTERFACE, S_FALSE};
+use winapi::shared::winerror::{S_OK, E_INVALIDARG, E_POINTER, E_NOINTERFACE, S_FALSE, E_UNEXPECTED};
 use winapi::shared::guiddef::{IsEqualGUID, GUID, REFIID};
 use winapi::ctypes::c_void;
 use winapi::shared::minwindef::{BOOL, TRUE};
@@ -64,9 +64,10 @@ impl EnumString {
 #[implementation(IEnumString)]
 impl EnumString {
     fn Next(&mut self, celt: ULONG, rgelt: *mut LPOLESTR, pceltFetched: *mut ULONG) -> HRESULT {
+        let celt = celt as usize;
         info!("Next for {} values", celt);
 
-        let values = self.values.iter().skip(self.offset).take(celt as usize).collect::<Vec<&String>>();
+        let values = self.values.iter().skip(self.offset).take(celt).collect::<Vec<&String>>();
 
         info!("{} values fetched", values.len());
 
@@ -74,41 +75,51 @@ impl EnumString {
             return S_FALSE;
         }
 
+        if pceltFetched.is_null() && celt > 1 {
+            return E_UNEXPECTED;
+        }
+
         self.offset = self.offset + values.len();
 
         unsafe {
-            // Allocate pointer list
-            let ptr_list_size = mem::size_of::<&[OLECHAR]>() * values.len();
-            let ptr_list = CoTaskMemAlloc(ptr_list_size) as *mut LPOLESTR;
-
-            info!("Allocated ptrs");
-
             for (i, item) in values.iter().enumerate() {
-                info!("Str {} => {}", i, item);
                 let elem = util::to_u16s(item).unwrap();
-                let elem_str = CoTaskMemAlloc(elem.len() * mem::size_of::<OLECHAR>()) as *mut OLECHAR;
+                let str_size = elem.len() * mem::size_of::<OLECHAR>();
+                let elem_str = CoTaskMemAlloc(str_size) as *mut OLECHAR;
+
+                info!("Str {} => {}, size {}, ptr {:?}", i, item, str_size, elem_str);
                 // Copy string
-                for (j, c) in elem.iter().enumerate() {
-                    *elem_str.offset(j as isize) = *c;
-                }
-                *ptr_list.offset(i as isize) = elem_str;
+                let str_slice: &[u16] = &elem;
+                std::ptr::copy_nonoverlapping(str_slice.as_ptr(), elem_str, elem.len());
+                *rgelt.offset(i as isize) = elem_str;
+            }
+
+            if !pceltFetched.is_null() {
+                *pceltFetched = values.len() as u32;
             }
         }
 
-        S_OK
+        if values.len() == celt {
+            S_OK
+        } else {
+            S_FALSE
+        }
     }
 
     fn Skip(&mut self, celt: ULONG) -> HRESULT {
+        info!("skip {}", celt);
         self.offset = self.offset +  celt as usize;
         S_OK
     }
     
     fn Reset(&mut self) -> HRESULT {
+        info!("reset");
         self.offset = 0;
         S_OK
     }
 
     fn Clone(&mut self, ppenum: *mut *mut IEnumString) -> HRESULT {
+        info!("clone");
         unsafe {
             let mut val = EnumString::new_with_offset(self.values.clone(), self.offset);
             *ppenum = val as *mut _;
