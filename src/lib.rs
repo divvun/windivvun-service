@@ -2,14 +2,18 @@
 
 #[macro_use]
 extern crate winapi;
+extern crate com_impl;
 // causes unresolved references together with log4rs
 // extern crate hfstospell;
-extern crate com_impl;
+
 
 #[macro_use]
 extern crate log;
 extern crate log4rs;
 extern crate dirs;
+
+mod util;
+use util::fmtGuid;
 
 use log::LevelFilter;
 use log4rs::append::file::FileAppender;
@@ -30,11 +34,8 @@ use winapi::Interface;
 use std::path::PathBuf;
 
 use spellcheckprovider::{ISpellCheckProviderFactory};
-
-fn fmtGuid(guid: &GUID) -> String {
-    format!("{{{:08X}-{:04X}-{:04X}-{:02X}{:02X}-{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}}}", guid.Data1, guid.Data2, guid.Data3, guid.Data4[0], guid.Data4[1], guid.Data4[2], guid.Data4[3], guid.Data4[4], guid.Data4[5], guid.Data4[6], guid.Data4[7])
-}
-
+use winapi::um::unknwnbase::{IClassFactory};
+use spell_impl::ClassFactory::DivvunSpellCheckProviderFactoryClassFactory;
 
 // mod util;
 
@@ -87,12 +88,23 @@ pub extern "stdcall" fn DllMain(module: u32, reason_for_call: u32, reserved: PVO
 #[no_mangle]
 pub extern "stdcall" fn DllGetClassObject(rclsid: REFCLSID, riid: REFIID, ppv: *mut PVOID) -> HRESULT {
     unsafe {
+        *ppv = std::ptr::null_mut();
+
         info!("DllGetClassObject");
         info!("rclsid: {}", fmtGuid(&*rclsid));
         info!("riid {}", fmtGuid(&*riid));
         info!("want {}", fmtGuid(&ISpellCheckProviderFactory::uuidof()));
         info!("want {:?}", IsEqualGUID(&ISpellCheckProviderFactory::uuidof(), &*rclsid));
+    
+
+        if IsEqualGUID(&*riid, &IClassFactory::uuidof()) {
+            info!("class factory created");
+            let fac = DivvunSpellCheckProviderFactoryClassFactory::new();
+            *ppv = fac as PVOID;
+            return S_OK;
+        }
     }
+
     return CLASS_E_CLASSNOTAVAILABLE;
 }
 

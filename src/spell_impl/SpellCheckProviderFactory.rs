@@ -5,7 +5,7 @@ use winapi::um::winnt::{LPCWSTR, HRESULT};
 use winapi::shared::ntdef::ULONG;
 use winapi::shared::winerror::{S_OK, E_INVALIDARG, E_POINTER};
 use winapi::shared::guiddef::{IsEqualGUID, GUID};
-
+use winapi::shared::minwindef::{TRUE, FALSE};
 use winapi::um::unknwnbase::{IUnknown, IUnknownVtbl};
 
 use std::sync::atomic::{AtomicU32, Ordering};
@@ -15,11 +15,14 @@ use spellcheckprovider::{ISpellCheckProviderFactory, ISpellCheckProviderFactoryV
 
 use com_impl::{ComInterface, interface, implementation};
 
+use std::ffi::OsString;
+use ::util::u16_ptr_to_string;
+
+use super::EnumString::EnumString;
 
 #[interface(ISpellCheckProviderFactory)]
 pub struct DivvunSpellCheckProviderFactory {
     refs: AtomicU32,
-    variable: u64,
 }
 
 #[implementation(IUnknown)]
@@ -56,14 +59,43 @@ impl DivvunSpellCheckProviderFactory {
 #[implementation(ISpellCheckProviderFactory)]
 impl DivvunSpellCheckProviderFactory {
     fn get_SupportedLanguages(&mut self, value: *mut *mut IEnumString) -> HRESULT {
+        info!("get supported languages");
+        let enum_if = EnumString::new(vec!["Hello".to_string(), "World".to_string()]);
+        unsafe {
+            *value = enum_if as *mut _;
+        }
         S_OK
     }
 
     fn IsSupported(&mut self, LanguageTag: LPCWSTR, value: *mut i32) -> HRESULT {
+        unsafe {
+            let tag = u16_ptr_to_string(LanguageTag);
+            info!("is supported {:?}", tag);
+            *value = FALSE;
+        }
         S_OK
     }
 
     fn CreateSpellCheckProvider(&mut self, LanguageTag: LPCWSTR, value: *mut *mut ISpellCheckProvider) -> HRESULT {
-        S_OK
+        unsafe {
+            let tag = u16_ptr_to_string(LanguageTag);
+            info!("create spell check provider {:?}", tag);
+        }
+        //S_OK
+        E_INVALIDARG
+    }
+}
+
+
+impl DivvunSpellCheckProviderFactory {
+    pub fn new() -> *mut DivvunSpellCheckProviderFactory {
+        let s = Self {
+            __vtable: Box::new(Self::create_vtable()),
+            refs: AtomicU32::new(1)
+        };
+
+        let ptr = Box::into_raw(Box::new(s));
+
+        ptr as *mut _
     }
 }
