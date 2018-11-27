@@ -31,36 +31,7 @@ pub struct EnumString {
     offset: usize
 }
 
-#[implementation(IUnknown)]
-impl EnumString {
-    fn QueryInterface(&mut self, riid: &GUID, obj: &mut usize) -> HRESULT {
-        use winapi::shared::winerror::{E_NOTIMPL, S_OK};
-        use winapi::Interface;
-
-        *obj = 0;
-
-        if IsEqualGUID(riid, &IEnumString::uuidof()) || IsEqualGUID(riid, &IUnknown::uuidof()) {
-            *obj = self as *mut _ as usize;
-            self.AddRef();
-            S_OK
-        } else {
-            E_NOTIMPL
-        }
-    }
-
-    fn AddRef(&mut self) -> ULONG {
-        let prev = self.refs.fetch_add(1, Ordering::SeqCst);
-        prev + 1
-    }
-
-    fn Release(&mut self) -> ULONG {
-        let prev = self.refs.fetch_sub(1, Ordering::SeqCst);
-        if prev == 1 {
-            let _box = unsafe { Box::from_raw(self as *mut _) };
-        }
-        prev - 1
-    }
-}
+IMPL_UNKNOWN!(IEnumString, EnumString);
 
 #[implementation(IEnumString)]
 impl EnumString {

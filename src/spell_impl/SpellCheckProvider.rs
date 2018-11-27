@@ -24,6 +24,7 @@ use hfstospell::archive::SpellerArchive;
 
 use ::SPELLER_REPOSITORY;
 use ::util;
+use super::EnumString::EnumString;
 
 ENUM!{enum WORDLIST_TYPE {
   WORDLIST_TYPE_IGNORE = 0,
@@ -39,36 +40,7 @@ pub struct DivvunSpellCheckProvider {
     speller: Arc<Speller>
 }
 
-#[implementation(IUnknown)]
-impl DivvunSpellCheckProvider {
-    fn QueryInterface(&mut self, riid: &GUID, obj: &mut usize) -> HRESULT {
-        use winapi::shared::winerror::{E_NOTIMPL, S_OK};
-        use winapi::Interface;
-
-        *obj = 0;
-
-        if IsEqualGUID(riid, &ISpellCheckProvider::uuidof()) || IsEqualGUID(riid, &IUnknown::uuidof()) {
-            *obj = self as *mut _ as usize;
-            self.AddRef();
-            S_OK
-        } else {
-            E_NOTIMPL
-        }
-    }
-
-    fn AddRef(&mut self) -> ULONG {
-        let prev = self.refs.fetch_add(1, Ordering::SeqCst);
-        prev + 1
-    }
-
-    fn Release(&mut self) -> ULONG {
-        let prev = self.refs.fetch_sub(1, Ordering::SeqCst);
-        if prev == 1 {
-            let _box = unsafe { Box::from_raw(self as *mut _) };
-        }
-        prev - 1
-    }
-}
+IMPL_UNKNOWN!(ISpellCheckProvider, DivvunSpellCheckProvider);
 
 #[implementation(ISpellCheckProvider)]
 impl DivvunSpellCheckProvider {
@@ -85,7 +57,8 @@ impl DivvunSpellCheckProvider {
     // run hf on entire text ???
     // split by word?
     // delimeters: ' ', '\t', '\n'
-    S_OK
+    E_INVALIDARG
+    // S_OK
   }
 
   fn Suggest(&mut self, word: LPCWSTR, value: *mut *mut IEnumString) -> HRESULT {
@@ -94,19 +67,21 @@ impl DivvunSpellCheckProvider {
     //let suggestions = self.speller.suggest(word);
     // sort suggestions
     // make IEnumString
+    let enum_if = EnumString::new(vec!["butts".to_string()]);
+    unsafe { *value = enum_if as *mut _; }
     S_OK
   }
 
   fn GetOptionValue(&mut self, optionId: LPCWSTR, value: *mut u8) -> HRESULT {
     info!("GetOptionValue");
     // nope
-    S_OK
+    E_INVALIDARG
   }
 
   fn SetOptionValue(&mut self, optionId: LPCWSTR, value: u8) -> HRESULT {
     info!("SetOptionValue");
     // nope
-    S_OK
+    E_INVALIDARG
   }
 
   fn get_OptionIds(&mut self, value: *mut *mut IEnumString) -> HRESULT {
@@ -116,6 +91,8 @@ impl DivvunSpellCheckProvider {
     // pub n_best: Option<usize>,
     // pub max_weight: Option<Weight>,
     // pub beam: Option<Weight>,
+    let enum_if = EnumString::new(vec![]);
+    unsafe { *value = enum_if as *mut _; }
     S_OK
   }
 
@@ -140,7 +117,7 @@ impl DivvunSpellCheckProvider {
   fn GetOptionDescription(&mut self, optionId: LPCWSTR, value: *mut *mut c_void) -> HRESULT {
     info!("GetOptionDescription");
     // nope
-    S_OK
+    E_INVALIDARG
   }
 
   fn InitializeWordlist(&mut self, wordlistType: WORDLIST_TYPE, words: *const IEnumString) -> HRESULT {

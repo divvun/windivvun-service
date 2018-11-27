@@ -29,7 +29,7 @@ use winapi::um::winuser::MessageBoxW;
 use winapi::um::winnt::{DLL_PROCESS_ATTACH, DLL_PROCESS_DETACH};
 use winapi::shared::ntdef::HRESULT;
 use winapi::shared::guiddef::{REFCLSID, REFIID, IsEqualGUID, GUID};
-use winapi::shared::winerror::{S_OK, CLASS_E_CLASSNOTAVAILABLE};
+use winapi::shared::winerror::{S_OK, CLASS_E_CLASSNOTAVAILABLE, S_FALSE};
 use winapi::Interface;
 
 use std::path::PathBuf;
@@ -75,13 +75,21 @@ fn test(msg: &str) {
 }
 
 #[no_mangle]
+pub extern "stdcall" fn DllCanUnloadNow() -> HRESULT {
+    info!("DllCanUnloadNow");
+    // TODO: HMMMMMMMM
+    S_FALSE
+}
+
+#[no_mangle]
 pub extern "stdcall" fn DllMain(module: u32, reason_for_call: u32, reserved: PVOID) -> bool {
     match reason_for_call {
         DLL_PROCESS_ATTACH => {
             initialize_logging();
 
-            info!("Library loaded!");
-            info!("{:?}", dirs::desktop_dir());
+            info!("Library loaded! procid = {}", std::process::id());
+            info!("{:?}", std::env::current_dir());
+            info!("{:?}", std::env::current_exe());
         },
         DLL_PROCESS_DETACH => {
             info!("Library unloaded :(");
