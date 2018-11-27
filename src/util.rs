@@ -30,6 +30,11 @@ pub unsafe fn u16_ptr_to_string(ptr: *const u16) -> OsString {
     OsString::from_wide(slice)
 }
 
+pub fn wide_from_slice(slice: &[u16]) -> OsString {
+    let len = (0..).take_while(|&i| slice[i] != 0).count();
+    OsString::from_wide(&slice[0..len])
+}
+
 pub unsafe fn alloc_com_str<S: AsRef<OsStr>>(s: S) -> Option<*mut OLECHAR> {
     unsafe fn inner(s: &OsStr) -> Option<*mut OLECHAR> {
         let s_vec = to_u16s(s).unwrap();
@@ -43,6 +48,32 @@ pub unsafe fn alloc_com_str<S: AsRef<OsStr>>(s: S) -> Option<*mut OLECHAR> {
         Some(elem_str)
     }
     inner(s.as_ref())
+}
+
+pub fn get_module_path() -> Option<OsString> {
+    use winapi::um::libloaderapi as ll;
+    use winapi::shared::minwindef::{HMODULE, MAX_PATH};
+
+
+    let mut handle: HMODULE = std::ptr::null_mut();
+    let func = get_module_path as *const u16;
+    let res = unsafe {
+        ll::GetModuleHandleExW(ll::GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |  ll::GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, func, &mut handle)
+    };
+    if res == 0 {
+        return None;
+    }
+
+    let mut path = vec![0u16; MAX_PATH];
+    let res = unsafe {
+        ll::GetModuleFileNameW(handle, path.as_mut_ptr(), path.len() as u32)
+    };
+    if res == 0 {
+        return None;
+    }
+
+    let osstr = wide_from_slice(&path);
+    Some(osstr)
 }
 
 pub fn fmt_guid(guid: &GUID) -> String {

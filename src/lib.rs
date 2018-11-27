@@ -43,13 +43,17 @@ mod speller_repository;
 use speller_repository::SpellerRepository;
 
 lazy_static! {
-    pub static ref SPELLER_REPOSITORY: SpellerRepository = SpellerRepository::new(r"C:\Program Files\SpellCheckTest\dicts");
+    pub static ref SPELLER_REPOSITORY: SpellerRepository = {
+        let mut path = PathBuf::from(util::get_module_path().unwrap()).parent().unwrap().to_path_buf();
+        path.push("dicts");
+        SpellerRepository::new(path.to_str().unwrap())
+    };
 }
 
 fn initialize_logging() {
-    let mut path = dirs::home_dir().unwrap_or(PathBuf::from("E:\\ttc\\divvun-win-spellcheck"));
+    let mut path = PathBuf::from(util::get_module_path().unwrap()).parent().unwrap().to_path_buf();
     path.push("divvunlog.txt");
-
+    
     let logfile = FileAppender::builder()
         .build(path).unwrap();
     
@@ -126,9 +130,8 @@ pub extern "stdcall" fn DllGetClassObject(rclsid: REFCLSID, riid: REFIID, ppv: *
 
 #[test]
 fn things() {
-    
-    info!("Library loaded!");
     //test("hello world");
+    println!("{:?}", util::get_module_path());
 }
 
 #[test]
