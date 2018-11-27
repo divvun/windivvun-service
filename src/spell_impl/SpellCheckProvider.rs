@@ -152,7 +152,12 @@ impl DivvunSpellCheckProvider {
   pub fn new(language_tag: &str) -> *mut DivvunSpellCheckProvider {
     //, archivePath: &str
     let archive_path = SPELLER_REPOSITORY.get_speller_archive(language_tag);
-    let archive = SpellerArchive::new(archive_path.unwrap().to_str().unwrap()).unwrap();
+    // TODO
+    let archive_path_w = archive_path.unwrap().to_str().unwrap().to_owned();
+
+    info!("Instanciating speller {} at {}", language_tag, archive_path_w);
+
+    let archive = SpellerArchive::new(&archive_path_w).unwrap();
     let speller = archive.speller();
     
     let s = Self {

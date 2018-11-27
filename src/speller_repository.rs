@@ -42,7 +42,11 @@ impl SpellerRepository {
         for path in self.get_speller_archives() {
             let tag_name = path.file_stem().and_then(|path| util::resolve_locale_name(&path.to_string_lossy()));
             match tag_name {
-                Some(tag_name) => return Some(path),
+                Some(tag_name) => {
+                    if tag_name == language_tag {
+                        return Some(path)
+                    }
+                },
                 _ => ()
             }
         }
