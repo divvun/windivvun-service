@@ -1,4 +1,5 @@
 #![cfg(windows)] 
+#![allow(non_snake_case)]
 
 use winapi::um::winnt::{LPCWSTR, HRESULT};
 
@@ -83,14 +84,7 @@ impl EnumString {
 
         unsafe {
             for (i, item) in values.iter().enumerate() {
-                let elem = util::to_u16s(item).unwrap();
-                let str_size = elem.len() * mem::size_of::<OLECHAR>();
-                let elem_str = CoTaskMemAlloc(str_size) as *mut OLECHAR;
-
-                info!("Str {} => {}, size {}, ptr {:?}", i, item, str_size, elem_str);
-                // Copy string
-                let str_slice: &[u16] = &elem;
-                std::ptr::copy_nonoverlapping(str_slice.as_ptr(), elem_str, elem.len());
+                let elem_str = util::alloc_com_str(item).unwrap();
                 *rgelt.offset(i as isize) = elem_str;
             }
 

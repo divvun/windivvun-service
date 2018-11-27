@@ -1,22 +1,24 @@
 #![feature(integer_atomics)]
+#![allow(unused_variables)]
 
 #[macro_use]
 extern crate winapi;
 extern crate com_impl;
-// causes unresolved references together with log4rs
 extern crate hfstospell;
+extern crate glob;
 
 #[macro_use]
 extern crate log;
 extern crate log4rs;
 extern crate dirs;
 
-mod util;
-use util::fmtGuid;
+#[macro_use]
+extern crate lazy_static;
 
-use log::LevelFilter;
+mod util;
+use util::fmt_guid;
+
 use log4rs::append::file::FileAppender;
-use log4rs::encode::pattern::PatternEncoder;
 use log4rs::config::{Appender, Config, Root};
 
 mod spellcheckprovider;
@@ -37,6 +39,12 @@ use winapi::um::unknwnbase::{IClassFactory};
 use spell_impl::ClassFactory::DivvunSpellCheckProviderFactoryClassFactory;
 
 mod speller_repository;
+
+use speller_repository::SpellerRepository;
+
+lazy_static! {
+    pub static ref SPELLER_REPOSITORY: SpellerRepository = SpellerRepository::new(r"C:\Program Files\SpellCheckTest\dicts");
+}
 
 fn initialize_logging() {
     let mut path = dirs::home_dir().unwrap_or(PathBuf::from("E:\\ttc\\divvun-win-spellcheck"));
@@ -90,18 +98,19 @@ pub extern "stdcall" fn DllGetClassObject(rclsid: REFCLSID, riid: REFIID, ppv: *
         *ppv = std::ptr::null_mut();
 
         info!("DllGetClassObject");
-        info!("rclsid: {}", fmtGuid(&*rclsid));
-        info!("riid {}", fmtGuid(&*riid));
-        info!("want {}", fmtGuid(&ISpellCheckProviderFactory::uuidof()));
-        info!("want {:?}", IsEqualGUID(&ISpellCheckProviderFactory::uuidof(), &*rclsid));
-    
 
         if IsEqualGUID(&*riid, &IClassFactory::uuidof()) {
-            info!("class factory created");
             let fac = DivvunSpellCheckProviderFactoryClassFactory::new();
             *ppv = fac as PVOID;
+            info!("class factory created");
             return S_OK;
         }
+
+        error!("Invalid interface requested");
+        info!("rclsid: {}", fmt_guid(&*rclsid));
+        info!("riid {}", fmt_guid(&*riid));
+        info!("want {}", fmt_guid(&ISpellCheckProviderFactory::uuidof()));
+        info!("want {:?}", IsEqualGUID(&ISpellCheckProviderFactory::uuidof(), &*rclsid));
     }
 
     return CLASS_E_CLASSNOTAVAILABLE;
@@ -112,15 +121,17 @@ fn things() {
     
     info!("Library loaded!");
     //test("hello world");
-
-    
 }
 
 #[test]
 fn name_resolve() {
     let tag = util::resolve_locale_name("en");
     println!("res {:?}", tag);
+    let tag = util::resolve_locale_name("smj");
+    println!("res {:?}", tag);
 
-    let rep = speller_repository::SpellerRepository::new();
-    rep.add_dictionary("sv-SE", r"C:\Program Files\SpellCheckTest\dicts\sme.zhfst");
+    println!("{:?}", SPELLER_REPOSITORY.get_speller_archives());
+
+    println!("{:?}", SPELLER_REPOSITORY.get_supported_languages());
+    //rep.add_dictionary("sv-SE", r"C:\Program Files\SpellCheckTest\dicts\sme.zhfst");
 }

@@ -1,4 +1,6 @@
 #![cfg(windows)] 
+#![allow(non_snake_case)]
+#![allow(unused_variables)]
 
 use winapi::um::objidlbase::IEnumString;
 use winapi::um::winnt::{LPCWSTR, HRESULT};
@@ -17,7 +19,7 @@ use std::sync::atomic::{AtomicU32, Ordering};
 
 use com_impl::{ComInterface, interface, implementation};
 
-use ::util::fmtGuid;
+use ::util::fmt_guid;
 
 use super::SpellCheckProviderFactory::DivvunSpellCheckProviderFactory;
 
@@ -61,7 +63,7 @@ impl DivvunSpellCheckProviderFactoryClassFactory {
 impl DivvunSpellCheckProviderFactoryClassFactory {
     fn CreateInstance(&mut self, pUnkOuter: *mut IUnknown, riid: REFIID, ppvObject: *mut *mut c_void) -> HRESULT {
         unsafe {
-            info!("CreateInstance for {}", fmtGuid(&*riid));
+            info!("CreateInstance for {}", fmt_guid(&*riid));
             if IsEqualGUID(&*riid, &ISpellCheckProviderFactory::uuidof()) {
                 info!("Creating SpellCheckProviderFactory");
                 let ptr = DivvunSpellCheckProviderFactory::new();

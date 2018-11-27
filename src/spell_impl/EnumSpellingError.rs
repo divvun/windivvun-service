@@ -1,5 +1,5 @@
 #![cfg(windows)] 
-#![feature(integer_atomics)]
+#![allow(non_snake_case)]
 
 use winapi::um::objidlbase::IEnumString;
 use winapi::um::winnt::{LPCWSTR, HRESULT};

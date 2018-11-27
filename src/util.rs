@@ -4,6 +4,9 @@ use std::os::windows::prelude::*;
 use winapi::shared::guiddef::GUID;
 use winapi::um::winnls::ResolveLocaleName;
 use winapi::ctypes::c_int;
+use winapi::um::combaseapi::CoTaskMemAlloc;
+use std::mem;
+use winapi::shared::wtypesbase::{LPOLESTR, OLECHAR};
 
 const LOCALE_NAME_MAX_LENGTH: usize = 85;
 
@@ -27,7 +30,22 @@ pub unsafe fn u16_ptr_to_string(ptr: *const u16) -> OsString {
     OsString::from_wide(slice)
 }
 
-pub fn fmtGuid(guid: &GUID) -> String {
+pub unsafe fn alloc_com_str<S: AsRef<OsStr>>(s: S) -> Option<*mut OLECHAR> {
+    unsafe fn inner(s: &OsStr) -> Option<*mut OLECHAR> {
+        let s_vec = to_u16s(s).unwrap();
+        let str_size = s_vec.len() * mem::size_of::<OLECHAR>();
+        let elem_str = CoTaskMemAlloc(str_size) as *mut OLECHAR;
+
+        info!("Str {:?} size {}, ptr {:?}", s, str_size, elem_str);
+        // Copy string
+        let str_slice: &[u16] = &s_vec;
+        std::ptr::copy_nonoverlapping(str_slice.as_ptr(), elem_str, s_vec.len());
+        Some(elem_str)
+    }
+    inner(s.as_ref())
+}
+
+pub fn fmt_guid(guid: &GUID) -> String {
     format!("{{{:08X}-{:04X}-{:04X}-{:02X}{:02X}-{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}}}", guid.Data1, guid.Data2, guid.Data3, guid.Data4[0], guid.Data4[1], guid.Data4[2], guid.Data4[3], guid.Data4[4], guid.Data4[5], guid.Data4[6], guid.Data4[7])
 }
 

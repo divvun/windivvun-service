@@ -1,39 +1,60 @@
+use glob::{glob_with, MatchOptions};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 use std::sync::{Arc, RwLock};
 use hfstospell::archive::SpellerArchive;
 
-struct SpellerRepository<'data> {
-    supported_languages: Vec<String>,
-    dictionaries: HashMap<String, String>,
-    speller_cache: HashMap<String, Arc<SpellerArchive<'data>>>
+use util;
+
+pub struct SpellerRepository {
+    base_directory: String,
 }
 
-impl<'data> SpellerRepository<'data> {
-    pub fn new() -> Self {
+impl SpellerRepository {
+    pub fn new(base_directory: &str) -> Self {
         SpellerRepository {
-            dictionaries: HashMap::new(),
-            supported_languages: Vec::new(),
-            speller_cache: HashMap::new()
+            base_directory: base_directory.to_string()
         }
     }
 
-    pub fn add_dictionary(&mut self, language_tag: &str, dictionary_archive: &str) {
-        let language_tag = language_tag.to_string();
-        self.supported_languages.push(language_tag);
-        self.dictionaries.insert(language_tag, dictionary_archive.to_string());
+    pub fn get_speller_archives(&self) -> Vec<PathBuf> {
+        let mut path: PathBuf = [&self.base_directory, "**/*.zhfst"].iter().collect();
+        info!("Enumerate dictionaries in {:?}", path.display());
+        glob_with(path.to_str().unwrap(), &MatchOptions {
+            case_sensitive: false,
+            require_literal_leading_dot: false,
+            require_literal_separator: false
+        }).map(|paths|
+            paths.filter_map(|i| i.ok())
+        ).unwrap().collect()
     }
 
     pub fn get_supported_languages(&self) -> Vec<String> {
-        self.supported_languages
+        info!("Resolve supported languages");
+        self.get_speller_archives().iter().filter_map(|path| {
+            path.file_stem().and_then(|path| util::resolve_locale_name(&path.to_string_lossy()))
+        }).collect()
     }
 
-    pub fn get_speller(&mut self, language_tag: &str) -> Option<Arc<SpellerArchive<'data>>> {
-        let path = self.dictionaries.get(language_tag)?;
+    pub fn get_speller_archive(&self, language_tag: &str) -> Option<PathBuf> {
+        info!("Resolve supported languages");
+        for path in self.get_speller_archives() {
+            let tag_name = path.file_stem().and_then(|path| util::resolve_locale_name(&path.to_string_lossy()));
+            match tag_name {
+                Some(tag_name) => return Some(path),
+                _ => ()
+            }
+        }
 
-        Some(self.speller_cache.entry(path.to_string()).or_insert_with(|| {
-            Arc::new(SpellerArchive::new(path).unwrap())
-        }).clone())
+        None
     }
+
+    // pub fn get_speller(&mut self, language_tag: &str) -> Option<Arc<SpellerArchive<'data>>> {
+    //     let path = self.dictionaries.get(language_tag)?;
+
+    //     Some(self.speller_cache.entry(path.to_string()).or_insert_with(|| {
+    //         Arc::new(SpellerArchive::new(path).unwrap())
+    //     }).clone())
+    // }
 }

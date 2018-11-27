@@ -10,6 +10,8 @@ crate-type = ["dylib"]
 [dependencies]
 log = "0.4"
 dirs = "1.0.4"
+glob = "0.2"
+lazy_static = "1.2.0"
 
 [dependencies.log4rs]
 version = "0.8.1"
@@ -23,7 +25,6 @@ features = ["winerror", "unknwnbase", "objbase", "oleauto", "winerror", "shlobj"
 
 [dependencies.hfst-ospell-rs]
 git = "https://github.com/bbqsrc/hfst-ospell-rs"
-branch = "experimental"
 
 [build-dependencies.winapi-tlb-bindgen]
 git = "https://github.com/Arnavion/winapi-tlb-bindgen"
