@@ -9,7 +9,11 @@ fn main() {
 
 	// TODO: find newest SDK folder here
 	let idl_content = {
-		let mut idl_file = std::fs::File::open(r"C:\Program Files (x86)\Windows Kits\10\Include\10.0.10586.0\um\spellcheckprovider.idl").unwrap();
+		let dir_iter = std::fs::read_dir(r"C:\Program Files (x86)\Windows Kits\10\Include\").unwrap();
+		let mut idl_file_path = dir_iter.last().unwrap().unwrap().path();
+		idl_file_path.push(r"um\spellcheckprovider.idl");
+		let mut idl_file = std::fs::File::open(idl_file_path).unwrap();
+		//let mut idl_file = std::fs::File::open(r"C:\Program Files (x86)\Windows Kits\10\Include\10.0.10586.0\um\spellcheckprovider.idl").unwrap();
 		let mut idl_content = String::new();
 		idl_file.read_to_string(&mut idl_content).unwrap();
 		idl_content
