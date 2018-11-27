@@ -1,42 +1,39 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
-use std::sync::{Arc, RwLock}
+use std::sync::{Arc, RwLock};
 use hfstospell::archive::SpellerArchive;
 
-struct SpellerRepository {
-    base_path: String,
-
+struct SpellerRepository<'data> {
     supported_languages: Vec<String>,
-    dictionaries: HashMap<String, PathBuf>,
-    speller_cache: HashMap<PathBuf, Arc<SpellerArchive>>
+    dictionaries: HashMap<String, String>,
+    speller_cache: HashMap<String, Arc<SpellerArchive<'data>>>
 }
 
-impl SpellerRepository {
-    pub fn new(base_path: &str) -> Self {
+impl<'data> SpellerRepository<'data> {
+    pub fn new() -> Self {
         SpellerRepository {
-            base_path: base_path.to_string(),
             dictionaries: HashMap::new(),
             supported_languages: Vec::new(),
             speller_cache: HashMap::new()
         }
     }
 
-    pub fn add_dictionary(&mut self, language_tag: &str, dictionary_archive: &Path) {
+    pub fn add_dictionary(&mut self, language_tag: &str, dictionary_archive: &str) {
         let language_tag = language_tag.to_string();
         self.supported_languages.push(language_tag);
-        self.dictionaries.insert(language_tag, dictionary_archive.to_path_buf());
+        self.dictionaries.insert(language_tag, dictionary_archive.to_string());
     }
 
     pub fn get_supported_languages(&self) -> Vec<String> {
         self.supported_languages
     }
 
-    pub fn get_speller(&mut self, language_tag: &str) -> Arc<RwLock<Speller>> {
-        let path = self.dictionaries.get(language_tag).unwrap();
+    pub fn get_speller(&mut self, language_tag: &str) -> Option<Arc<SpellerArchive<'data>>> {
+        let path = self.dictionaries.get(language_tag)?;
 
-        &self.speller_cache.entry(&path).or_insert_with(|| {
-            SpellerArchive::new(path)
-        }).speller
+        Some(self.speller_cache.entry(path.to_string()).or_insert_with(|| {
+            Arc::new(SpellerArchive::new(path).unwrap())
+        }).clone())
     }
 }

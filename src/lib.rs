@@ -36,9 +36,7 @@ use spellcheckprovider::{ISpellCheckProviderFactory};
 use winapi::um::unknwnbase::{IClassFactory};
 use spell_impl::ClassFactory::DivvunSpellCheckProviderFactoryClassFactory;
 
-//mod speller_repository;
-
-// mod util;
+mod speller_repository;
 
 fn initialize_logging() {
     let mut path = dirs::home_dir().unwrap_or(PathBuf::from("E:\\ttc\\divvun-win-spellcheck"));
@@ -109,12 +107,20 @@ pub extern "stdcall" fn DllGetClassObject(rclsid: REFCLSID, riid: REFIID, ppv: *
     return CLASS_E_CLASSNOTAVAILABLE;
 }
 
-
 #[test]
 fn things() {
     
     info!("Library loaded!");
-    test("hello world");
+    //test("hello world");
 
-    let rep = speller_repository::SpellerRepository::new(r"C:\Program Files\SpellCheckTest\dicts");
+    
+}
+
+#[test]
+fn name_resolve() {
+    let tag = util::resolve_locale_name("en");
+    println!("res {:?}", tag);
+
+    let rep = speller_repository::SpellerRepository::new();
+    rep.add_dictionary("sv-SE", r"C:\Program Files\SpellCheckTest\dicts\sme.zhfst");
 }
