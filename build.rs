@@ -34,8 +34,12 @@ fn main() {
 		idl_out
 	};
 
+	let mut midl_path = r"C:\Program Files (x86)\Windows Kits\10\bin\x86\midl.exe";
+	if !std::path::Path::new(midl_path).exists() {
+		midl_path = "midl.exe"
+	}
 	let midl_command_status =
-		std::process::Command::new("midl.exe") // Expected to be running in "x64 Native Tools Command Prompt"
+		std::process::Command::new(midl_path) // Expected to be running in "x64 Native Tools Command Prompt"
 		.arg(idl_out)
 		.arg("/tlb")
 		.arg("SpellCheckProvider.tlb")

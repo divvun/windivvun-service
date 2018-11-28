@@ -45,9 +45,10 @@ impl DivvunSpellCheckProviderFactory {
     }
 
     fn IsSupported(&mut self, LanguageTag: LPCWSTR, value: *mut i32) -> HRESULT {
-        let tag = unsafe { u16_ptr_to_string(LanguageTag) };
+        let tag = com_wstr_ptr!(LanguageTag);
+
         let langs = SPELLER_REPOSITORY.get_supported_languages();
-        let supported = tag.clone().into_string().map(|s| langs.contains(&s)).unwrap_or(false);
+        let supported = langs.contains(&tag);
 
         info!("is supported {:?}: {}", tag, supported);
         
@@ -57,18 +58,17 @@ impl DivvunSpellCheckProviderFactory {
     }
 
     fn CreateSpellCheckProvider(&mut self, LanguageTag: LPCWSTR, value: *mut *mut ISpellCheckProvider) -> HRESULT {
-        let tag = unsafe { u16_ptr_to_string(LanguageTag) };
+        let tag = com_wstr_ptr!(LanguageTag);
         let langs = SPELLER_REPOSITORY.get_supported_languages();
-        let tag_str = tag.into_string();
-        let supported = tag_str.clone().map(|s| langs.contains(&s)).unwrap_or(false);
+        let supported = langs.contains(&tag);
         
         if !supported {
             return E_INVALIDARG
         }
 
-        info!("create spell check provider {:?}", tag_str);
+        info!("create spell check provider {:?}", tag);
 
-        let provider = DivvunSpellCheckProvider::new(&tag_str.unwrap());
+        let provider = DivvunSpellCheckProvider::new(&tag);
 
         unsafe {
             *value = provider as *mut  _

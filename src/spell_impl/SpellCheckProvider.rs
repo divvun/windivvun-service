@@ -25,6 +25,7 @@ use hfstospell::archive::SpellerArchive;
 use ::SPELLER_REPOSITORY;
 use ::util;
 use super::EnumString::EnumString;
+use super::EnumSpellingError::DivvunEnumSpellingError;
 
 ENUM!{enum WORDLIST_TYPE {
   WORDLIST_TYPE_IGNORE = 0,
@@ -53,23 +54,34 @@ impl DivvunSpellCheckProvider {
   }
 
   fn Check(&mut self, text: LPCWSTR, value: *mut *mut IEnumSpellingError) -> HRESULT {
-    info!("Check");
-    // run hf on entire text ???
-    // split by word?
-    // delimeters: ' ', '\t', '\n'
-    E_INVALIDARG
-    // S_OK
+    let text = com_wstr_ptr!(text);
+
+    info!("Check {}", text);
+
+    let enum_err = DivvunEnumSpellingError::new(self.speller.to_owned(), text);
+    unsafe { *value = enum_err as *mut _; }
+
+    S_OK
   }
 
   fn Suggest(&mut self, word: LPCWSTR, value: *mut *mut IEnumString) -> HRESULT {
-    info!("Suggest");
-    // self.speller.is_correct(text)
-    //let suggestions = self.speller.suggest(word);
-    // sort suggestions
-    // make IEnumString
-    let enum_if = EnumString::new(vec!["butts".to_string()]);
+    let word = com_wstr_ptr!(word);
+
+    info!("Suggest {}", word);
+    let speller_suggestions = self.speller.to_owned().suggest(&word);
+    let mut suggestions = speller_suggestions.iter().map(|s| s.value().to_string()).collect::<Vec<String>>();
+    info!("{} suggestions", suggestions.len());
+
+    let mut result: HRESULT = S_OK;
+    if suggestions.len() == 0 {
+      suggestions.push(word);
+      result = S_FALSE;
+    }
+
+    let enum_if = EnumString::new(suggestions);
     unsafe { *value = enum_if as *mut _; }
-    S_OK
+    
+    result
   }
 
   fn GetOptionValue(&mut self, optionId: LPCWSTR, value: *mut u8) -> HRESULT {

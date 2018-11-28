@@ -1,3 +1,5 @@
+use ::util;
+
 macro_rules! IMPL_UNKNOWN {
   ($x:ty, $y:ty) => {
     #[implementation(IUnknown)]
@@ -36,7 +38,29 @@ macro_rules! IMPL_UNKNOWN {
   }
 }
 
+macro_rules! com_wstr_ptr {
+    ($x:ident) => {{
+        if $x.is_null() {
+            return E_POINTER;
+        }
+
+        let s = unsafe { ::util::u16_ptr_to_string($x) }.into_string();
+        if s.is_err() {
+            return E_INVALIDARG;
+        }
+
+        let s = s.unwrap();
+
+        if s.len() == 0 {
+            return E_INVALIDARG;
+        }
+
+        s
+    }};
+}
+
 pub mod SpellCheckProviderFactory;
 pub mod ClassFactory;
 pub mod EnumString;
 pub mod SpellCheckProvider;
+pub mod EnumSpellingError;

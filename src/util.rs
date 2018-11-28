@@ -50,10 +50,11 @@ pub unsafe fn alloc_com_str<S: AsRef<OsStr>>(s: S) -> Option<*mut OLECHAR> {
     inner(s.as_ref())
 }
 
+/// Returns the path to the currently loaded module on Windows (DLL or executable), by getting the module handle
+/// from a function in the module (get_module_path itself) and returning its filename.
 pub fn get_module_path() -> Option<OsString> {
     use winapi::um::libloaderapi as ll;
     use winapi::shared::minwindef::{HMODULE, MAX_PATH};
-
 
     let mut handle: HMODULE = std::ptr::null_mut();
     let func = get_module_path as *const u16;
@@ -109,5 +110,5 @@ pub fn resolve_locale_name(tag: &str) -> Option<String> {
         return None;
     }
 
-    Some(OsString::from_wide(&buf).into_string().unwrap())
+    OsString::from_wide(&buf).into_string().ok()
 }

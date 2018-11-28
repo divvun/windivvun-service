@@ -1,0 +1,15 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Spelling\Spellers\samplespell]
+"CLSID"="{E45885BF-50CB-4F8F-9B19-95767EAF0F5C}"
+
+[HKEY_CURRENT_USER\SOFTWARE\Classes\CLSID\{E45885BF-50CB-4F8F-9B19-95767EAF0F5C}]
+@="Divvun Spell Checking Provider"
+"AppId"="{E45885BF-50CB-4F8F-9B19-95767EAF0F5C}"
+
+[HKEY_CURRENT_USER\SOFTWARE\Classes\CLSID\{E45885BF-50CB-4F8F-9B19-95767EAF0F5C}\InprocServer32]
+@="C:\\Program Files\\SpellCheckTest\\winspellcheck.dll"
+"ThreadingModel"="Both"
+
+[HKEY_CURRENT_USER\SOFTWARE\Classes\CLSID\{E45885BF-50CB-4F8F-9B19-95767EAF0F5C}\Version]
+@="1.0"
