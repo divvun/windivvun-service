@@ -19,7 +19,7 @@ use spellcheckprovider::{ISpellCheckProvider, ISpellCheckProviderVtbl, IEnumSpel
 
 use com_impl::{ComInterface, interface, implementation};
 
-use hfstospell::speller::Speller;
+use hfstospell::speller::{Speller, SpellerConfig};
 use hfstospell::archive::SpellerArchive;
 
 use ::SPELLER_REPOSITORY;
@@ -68,12 +68,19 @@ impl DivvunSpellCheckProvider {
     let word = com_wstr_ptr!(word);
 
     info!("Suggest {}", word);
-    //let speller_suggestions = self.speller.to_owned().suggest(&word);
-    //let mut suggestions = speller_suggestions.iter().map(|s| s.value().to_string()).collect::<Vec<String>>();
-    let mut suggestions = vec!["wack".to_string()];
+    let speller_config = SpellerConfig {
+      n_best: 5,
+      max_weight: 50,
+      beam: None
+    };
+
+    let mut speller_suggestions = self.speller.to_owned().suggest_with_config(&word, &speller_config);
+    speller_suggestions.sort_unstable_by(|a, b| a.partial_cmp(b).unwrap());
+    
+    let mut suggestions = speller_suggestions.iter().map(|s| s.value().to_string()).collect::<Vec<String>>();
     info!("{} suggestions", suggestions.len());
 
-    std::thread::sleep(std::time::Duration::from_millis(2000));
+    //std::thread::sleep(std::time::Duration::from_millis(2000));
 
     let mut result: HRESULT = S_OK;
     if suggestions.len() == 0 {

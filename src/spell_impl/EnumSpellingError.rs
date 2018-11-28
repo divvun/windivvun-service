@@ -16,7 +16,7 @@ use spellcheckprovider::{IEnumSpellingError, IEnumSpellingErrorVtbl, ISpellingEr
 
 use com_impl::{ComInterface, interface, implementation};
 
-use hfstospell::speller::Speller;
+use hfstospell::speller::{SpellerConfig, Speller};
 use hfstospell::tokenizer::{Tokenize, Token};
 
 use std::sync::Arc;
@@ -107,57 +107,64 @@ IMPL_UNKNOWN!(IEnumSpellingError, DivvunEnumSpellingError);
 impl DivvunEnumSpellingError {
     fn Next(&mut self, value: *mut *mut ISpellingError) -> HRESULT {
         info!("Next");
-        // let tokenizer = self.text[self.text_offset..].tokenize();
-        // let tokens = tokenizer.filter_map(|t| {
-        // info!("rtoken {:?}", t);
-        // match t {
-        //     Token::Word(_, _, _) => Some(t),
-        //     _ => None
-        // }});
+        let speller_config = SpellerConfig {
+            n_best: 2,
+            max_weight: 50,
+            beam: None
+        };
+            
+        let tokenizer = self.text[self.text_offset..].tokenize();
+        let tokens = tokenizer.filter_map(|t| {
+        info!("rtoken {:?}", t);
+        match t {
+            Token::Word(_, _, _) => Some(t),
+            _ => None
+        }});
         
-        // for token in tokens {
-        //     info!("Token {:?}", token);
-        //     self.text_offset = token.end();
+        for token in tokens {
+            info!("Token {:?}", token);
+            self.text_offset = token.end();
 
-        //     let mut speller_suggestions = self.speller.to_owned().suggest(token.value());
-        //     speller_suggestions.sort_unstable_by(|a, b| b.partial_cmp(a).unwrap());
-        //     //info!("suggestions {:?}", speller_suggestions);
-        //     let suggestions = speller_suggestions.iter().map(|s| s.value().to_string()).collect::<Vec<String>>();
+            let speller = self.speller.to_owned();
 
-        //     if suggestions.len() != 0 {
-        //         let action = if suggestions.len() == 1 {
-        //             CORRECTIVE_ACTION_REPLACE
-        //         } else {
-        //             CORRECTIVE_ACTION_GET_SUGGESTIONS
-        //         };
+            if speller.is_correct(token.value()) {
+                continue;
+            }
+            
+            let mut speller_suggestions = speller.suggest(token.value());
+            speller_suggestions.sort_unstable_by(|a, b| a.partial_cmp(b).unwrap());
+            //info!("suggestions {:?}", speller_suggestions);
+            let suggestions = speller_suggestions.iter().map(|s| s.value().to_string()).collect::<Vec<String>>();
 
-        //         let suggestion = if suggestions.len() == 1 {
-        //             Some(suggestions[0].to_owned())
-        //         } else {
-        //             None
-        //         };
+            if suggestions.len() != 0 {
+                let action = if suggestions.len() == 1 {
+                    CORRECTIVE_ACTION_REPLACE
+                } else {
+                    CORRECTIVE_ACTION_GET_SUGGESTIONS
+                };
 
-        //         info!("error {:?} {:?}", action, suggestion);
-        //         return S_FALSE;
+                let suggestion = if suggestions.len() == 1 {
+                    Some(suggestions[0].to_owned())
+                } else {
+                    None
+                };
 
-        //         let error =  DivvunSpellingError::new(0, 5, CORRECTIVE_ACTION_GET_SUGGESTIONS, None);
-        //         // let error = DivvunSpellingError::new(
-        //         //     token.start() as u32,
-        //         //     (token.start() - token.end()) as u32,
-        //         //     action,
-        //         //     suggestion
-        //         // );
+                info!("error {:?} {:?}", action, suggestion);
 
-        //         info!("fuck");
-        //         unsafe { *value = error as *mut _; }
-        //         info!("return");
-        //         return S_OK;
-        //     }
-        // }
-        let error = DivvunSpellingError::new(0, 5, CORRECTIVE_ACTION_GET_SUGGESTIONS, None);
-        unsafe { *value = error as *mut _; }
-        S_OK
-        //S_FALSE
+                let error = DivvunSpellingError::new(
+                    token.start() as u32,
+                    (token.start() - token.end()) as u32,
+                    action,
+                    suggestion
+                );
+
+                unsafe { *value = error as *mut _; }
+                info!("return");
+                return S_OK;
+            }
+        }
+
+        S_FALSE
     }
 }
 
