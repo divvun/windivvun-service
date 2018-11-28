@@ -99,6 +99,7 @@ impl EnumString {
     }
 
     pub fn new_with_offset(values: Vec<String>, offset: usize) -> *mut EnumString {
+        info!("Create enum string {} values", values.len());
         let s = Self {
             __vtable: Box::new(Self::create_vtable()),
             refs: AtomicU32::new(1),

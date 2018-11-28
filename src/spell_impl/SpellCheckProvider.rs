@@ -78,6 +78,8 @@ impl DivvunSpellCheckProvider {
       result = S_FALSE;
     }
 
+    info!("create");
+
     let enum_if = EnumString::new(suggestions);
     unsafe { *value = enum_if as *mut _; }
     
