@@ -68,9 +68,12 @@ impl DivvunSpellCheckProvider {
     let word = com_wstr_ptr!(word);
 
     info!("Suggest {}", word);
-    let speller_suggestions = self.speller.to_owned().suggest(&word);
-    let mut suggestions = speller_suggestions.iter().map(|s| s.value().to_string()).collect::<Vec<String>>();
+    //let speller_suggestions = self.speller.to_owned().suggest(&word);
+    //let mut suggestions = speller_suggestions.iter().map(|s| s.value().to_string()).collect::<Vec<String>>();
+    let mut suggestions = vec!["wack".to_string()];
     info!("{} suggestions", suggestions.len());
+
+    std::thread::sleep(std::time::Duration::from_millis(2000));
 
     let mut result: HRESULT = S_OK;
     if suggestions.len() == 0 {
