@@ -14,7 +14,7 @@ extern crate parking_lot;
 #[macro_use]
 extern crate log;
 extern crate log4rs;
-extern crate dirs;
+extern crate directories;
 
 #[macro_use]
 extern crate lazy_static;
@@ -107,6 +107,11 @@ pub extern "stdcall" fn DllMain(module: u32, reason_for_call: u32, reserved: PVO
             info!("Library loaded! procid = {}", std::process::id());
             info!("{:?}", std::env::current_dir());
             info!("{:?}", std::env::current_exe());
+            info!("prj {:?}", directories::ProjectDirs::from("com", "Divvun", "System Spell Checker"));
+            for (key, value) in std::env::vars() {
+                info!("{}: {}", key, value);
+            }
+
         },
         DLL_PROCESS_DETACH => {
             info!("Library unloaded :(");
