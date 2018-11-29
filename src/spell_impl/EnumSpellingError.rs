@@ -165,6 +165,7 @@ impl DivvunEnumSpellingError {
                 continue;
             }
 
+            self.speller_cache.prime(token.value());
             let error = DivvunSpellingError::new(
                 (tokenizer_start + token.start()) as u32,
                 (token.end() - token.start()) as u32,

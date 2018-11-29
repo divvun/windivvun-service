@@ -2,7 +2,8 @@ use hfstospell::speller::{Speller, SpellerConfig};
 use hfstospell::archive::SpellerArchive;
 
 use std::collections::HashMap;
-use std::sync::{RwLock, Arc};
+use std::sync::Arc;
+use parking_lot::RwLock;
 use std::thread;
 use std::sync::mpsc::{Sender, Receiver, channel};
 
@@ -10,8 +11,24 @@ pub struct SpellerCache {
     speller: Arc<Speller>,
     //speller_config: SpellerConfig,
     is_correct: RwLock<HashMap<String, bool>>,
-    suggestions: RwLock<HashMap<String, Vec<String>>>,
+    suggestions: Arc<RwLock<HashMap<String, Vec<String>>>>,
     sender: Sender<String>
+}
+
+fn suggest_internal(speller: &Arc<Speller>, word: &str) -> Vec<String> {
+    info!("suggest internal {}", word);
+    let speller_config = SpellerConfig {
+        n_best: Some(5),
+        max_weight: Some(50.0),
+        beam: None
+    };
+    
+    let res: Vec<String> = speller.to_owned()
+        .suggest_with_config(word, &speller_config)
+        .iter().map(|s| s.value().to_string()).collect();
+    
+    info!("suggs {:?}", res.clone());
+    res
 }
 
 impl SpellerCache {
@@ -22,43 +39,44 @@ impl SpellerCache {
             sender: tx,
             speller: speller.clone(),
             is_correct: RwLock::new(HashMap::new()),
-            suggestions: RwLock::new(HashMap::new()),
+            suggestions: Arc::new(RwLock::new(HashMap::new())),
         });
 
         {
-            // let cache = result.clone();
-            // thread::spawn(move || loop {
-            //     match rx.recv() {
-            //         Ok(word) => {
-            //             info!("Received prime for {}", word);
-            //             // Prime the word
-            //             let lock = cache.suggestions.write().unwrap();
-            //             if lock.contains_key(&word) {
-            //                 continue;
-            //             }
-            //             let result = cache.suggest_internal(&word);
-            //             lock.insert(word.to_string(), result);
-            //             info!("Primed {}", word);
-            //         },
-            //         _ => ()
-            //     }
-            // });
+            //let suggestions = result.suggestions
+            let suggestions = result.suggestions.clone();
+            thread::spawn(move || loop {
+                match rx.recv() {
+                    Ok(word) => {
+                        info!("Received prime for {}", word);
+                        // Prime the word
+                        if suggestions.read().contains_key(&word) {
+                            continue;
+                        }
+                        let result = suggest_internal(&speller, &word);
+
+                        let mut lock = suggestions.write();
+                        lock.insert(word.to_string(), result);
+                        info!("Primed {}", word);
+                    },
+                    _ => ()
+                }
+            });
         }
 
         result
     }
 
-    pub fn prime(self: Arc<Self>, word: &str) {
+    pub fn prime(self: &Arc<Self>, word: &str) {
         info!("Attempting to prime {}", word);
-        let lock = self.suggestions.read().unwrap();
-        if !lock.contains_key(word) {
+        if !self.suggestions.read().contains_key(word) {
             self.sender.send(word.to_string());
         }
     }
 
-    pub fn is_correct(self: Arc<Self>, word: &str) -> bool {
+    pub fn is_correct(self: &Arc<Self>, word: &str) -> bool {
         {
-            let lock = self.is_correct.read().unwrap();
+            let lock = self.is_correct.read();
             let result = lock.get(word);
             if result.is_some() {
                 return *result.unwrap();
@@ -66,39 +84,22 @@ impl SpellerCache {
         }
 
         let is_correct = self.speller.to_owned().is_correct(word);
-        self.is_correct.write().unwrap().insert(word.to_string(), is_correct);
+        self.is_correct.write().insert(word.to_string(), is_correct);
         is_correct
     }
 
-    pub fn suggest(self: Arc<Self>, word: &str) -> Vec<String> {
+    pub fn suggest(self: &Arc<Self>, word: &str) -> Vec<String> {
         {
-            let lock = self.suggestions.read().unwrap();
+            let lock = self.suggestions.read();
             let result = lock.get(word);
             if result.is_some() {
                 return result.unwrap().to_owned();
             }
         }
-
         
-        let result = self.suggest_internal(word);
-        self.suggestions.write().unwrap().insert(word.to_string(), result.to_owned());
+        let result = suggest_internal(&self.speller, word);
+        self.suggestions.write().insert(word.to_string(), result.to_owned());
         result
-    }
-
-    fn suggest_internal(self: &Arc<Self>, word: &str) -> Vec<String> {
-        info!("suggest internal {}", word);
-        let speller_config = SpellerConfig {
-            n_best: Some(5),
-            max_weight: Some(50.0),
-            beam: None
-        };
-        
-        let res: Vec<String> = self.speller.to_owned()
-            .suggest_with_config(word, &speller_config)
-            .iter().map(|s| s.value().to_string()).collect();
-        
-        info!("suggs {:?}", res.clone());
-        res
     }
 }
 
