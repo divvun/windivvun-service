@@ -22,9 +22,12 @@ use com_impl::{ComInterface, interface, implementation};
 use hfstospell::speller::{Speller, SpellerConfig};
 use hfstospell::archive::SpellerArchive;
 
+use std::collections::HashMap;
+
 use ::SPELLER_REPOSITORY;
 use ::util;
 use ::speller_cache::SpellerCache;
+use ::wordlists::Wordlists;
 
 use super::EnumString::EnumString;
 use super::EnumSpellingError::DivvunEnumSpellingError;
@@ -41,7 +44,8 @@ pub struct DivvunSpellCheckProvider {
     refs: AtomicU32,
     language_tag: String,
     speller: Arc<Speller>,
-    speller_cache: Arc<SpellerCache>
+    speller_cache: Arc<SpellerCache>,
+    wordlists: Arc<Wordlists>
 }
 
 IMPL_UNKNOWN!(ISpellCheckProvider, DivvunSpellCheckProvider);
@@ -61,7 +65,7 @@ impl DivvunSpellCheckProvider {
 
     info!("Check {}", text);
 
-    let enum_err = DivvunEnumSpellingError::new(self.speller_cache.to_owned(), text);
+    let enum_err = DivvunEnumSpellingError::new(self.speller_cache.to_owned(), self.wordlists.to_owned(), text);
     unsafe { *value = enum_err as *mut _; }
 
     S_OK
@@ -72,21 +76,56 @@ impl DivvunSpellCheckProvider {
 
     info!("Suggest {}", word);
 
-    let mut suggestions = self.speller_cache.to_owned().suggest(&word);
-    info!("{} suggestions: {:?}", suggestions.len(), suggestions);
+    let mut suggestions: Vec<String> = vec!();
+    let mut result: Option<HRESULT> = None;
 
-    //std::thread::sleep(std::time::Duration::from_millis(2000));
+    // Check ignore wordlist
+    if self.wordlists.contains_ignore(&word) {
+      info!("wordlist ignore");
+      suggestions.push(word.clone());
+      result = Some(S_FALSE);
+    }
 
-    let mut result: HRESULT = S_OK;
-    if suggestions.len() == 0 {
-      suggestions.push(word);
-      result = S_FALSE;
+    // Check auto correct wordlist. TODO: should the speller's suggestions be appended to this perhaps?
+    if result.is_none() {
+      match self.wordlists.get_replacement(&word) {
+        Some(replacement) => {
+          info!("wordlist replacement {}", replacement);
+          suggestions.push(replacement);
+          result = Some(S_OK);
+        },
+        _ => ()
+      }
+    }
+
+    // Check add wordlist
+    if result.is_none() && self.wordlists.contains_add(&word) {
+      info!("wordlist add");
+      suggestions.push(word.clone());
+      result = Some(S_OK);
+    }
+
+    // Check speller result
+    if result.is_none() {
+      result = Some(S_OK);
+      suggestions = self.speller_cache.to_owned().suggest(&word);
+      info!("speller {} suggestions: {:?}", suggestions.len(), suggestions);
+
+      // No results, word is correct if no excludes in wordlist
+      if suggestions.len() == 0 {
+        // Check exclude wordlist (no suggestions but the word is incorrect)
+        if !self.wordlists.contains_exclude(&word) {
+          info!("wordlist exclude");
+          suggestions.push(word.clone());
+          result = Some(S_FALSE);
+        }
+      }
     }
 
     let enum_if = EnumString::new(suggestions);
     unsafe { *value = enum_if as *mut _; }
     
-    result
+    result.unwrap()
   }
 
   fn GetOptionValue(&mut self, optionId: LPCWSTR, value: *mut u8) -> HRESULT {
@@ -138,20 +177,18 @@ impl DivvunSpellCheckProvider {
   }
 
   fn InitializeWordlist(&mut self, wordlistType: WORDLIST_TYPE, words: *const IEnumString) -> HRESULT {
-    info!("InitializeWordlist");
+    info!("InitializeWordlist {}", wordlistType);
     let elem_count: u32 = 50;
+    let mut words_vec: Vec<String> = vec!();
     let mut fetched: ULONG = 0;
     let mut vec: Vec<LPOLESTR> = vec![std::ptr::null_mut(); elem_count as usize];
     loop {
       let res = unsafe { (*words).Next(elem_count, vec.as_mut_ptr(), &mut fetched) };
       if res == S_OK || res == S_FALSE {
-        info!("fetched {} elems", fetched);
-
         for i in (0..fetched) {
           let word = unsafe { util::u16_ptr_to_string(vec[i as usize]) };
           unsafe { CoTaskMemFree(vec[i as usize] as *mut c_void); }
-
-          info!("{}: {:?}", i, word);
+          words_vec.push(word.into_string().unwrap());
         }
       }
       
@@ -159,8 +196,26 @@ impl DivvunSpellCheckProvider {
         break
       }
     }
-    // nope
-    // or: keep list of words, check for equalness before invoking speller
+
+    match wordlistType {
+      WORDLIST_TYPE_ADD => self.wordlists.set_add(words_vec),
+      WORDLIST_TYPE_EXCLUDE => self.wordlists.set_exclude(words_vec),
+      WORDLIST_TYPE_AUTOCORRECT => {
+        let mut map: HashMap<String, String> = HashMap::new();
+        for word in words_vec {
+          let tokens = word.split("\t").collect::<Vec<&str>>();
+          if (tokens.len() == 2) {
+            map.insert(tokens[0].to_string(), tokens[1].to_string());
+          } else {
+            error!("Invalid auto correct pair: {:?}", tokens);
+          }
+        }
+        self.wordlists.set_auto_correct(map)
+      },
+      WORDLIST_TYPE_IGNORE => self.wordlists.set_ignore(words_vec),
+      _ => info!("invalid wordlist type {}", wordlistType)
+    };
+
     S_OK
   }
 }
@@ -182,7 +237,8 @@ impl DivvunSpellCheckProvider {
         refs: AtomicU32::new(1),
         language_tag: language_tag.to_string(),
         speller: speller.clone(),
-        speller_cache: SpellerCache::new(speller)
+        speller_cache: SpellerCache::new(speller),
+        wordlists: Wordlists::new()
     };
 
     let ptr = Box::into_raw(Box::new(s));

@@ -23,6 +23,7 @@ use std::sync::Arc;
 use std::ffi::OsString;
 use ::util;
 use ::speller_cache::SpellerCache;
+use ::wordlists::Wordlists;
 
 #[interface(ISpellingError)]
 pub struct DivvunSpellingError {
@@ -100,6 +101,7 @@ pub struct DivvunEnumSpellingError {
     speller_cache: Arc<SpellerCache>,
     text: Arc<String>,
     text_offset: usize,
+    wordlists: Arc<Wordlists>
 }
 
 IMPL_UNKNOWN!(IEnumSpellingError, DivvunEnumSpellingError);
@@ -120,46 +122,57 @@ impl DivvunEnumSpellingError {
             info!("Token {:?}", token);
             self.text_offset = tokenizer_start + token.end();
 
-            let now = std::time::Instant::now();
-            if self.speller_cache.to_owned().is_correct(token.value()) {
-                info!("is correct");
+            // Check ignore wordlist
+            if self.wordlists.contains_ignore(token.value()) {
+                info!("Wordlist ignore");
                 continue;
             }
 
-            info!("is_correct time {}", now.elapsed().as_millis());
-            
-            // let suggestions = self.speller_cache.to_owned().suggest(token.value());
-            // info!("total time {}", now.elapsed().as_millis());
-            // info!("suggestions {:?}", suggestions);
+            let mut action: Option<u32> = None;
+            let mut replacement: Option<String> = None;
 
-            // let action = if suggestions.len() == 1 {
-            //     CORRECTIVE_ACTION_REPLACE
-            // } else {
-            //     CORRECTIVE_ACTION_GET_SUGGESTIONS
-            // };
+            // Check auto correct wordlist
+            match self.wordlists.get_replacement(token.value()) {
+                Some(r) => {
+                    info!("wordlist replace {}", r);
 
-            // let suggestion = if suggestions.len() == 1 {
-            //     Some(suggestions[0].to_owned())
-            // } else {
-            //     None
-            // };
+                    action = Some(CORRECTIVE_ACTION_REPLACE);
+                    replacement = Some(r);  
+                },
+                _ => ()
+            };
 
-            info!("error {} {}", (tokenizer_start + token.start()) as u32, (token.end() - token.start()) as u32);
-            //info!("{}, {}", token.start(), token.end());
+            // Check exclude wordlist
+            if action.is_none() && self.wordlists.contains_exclude(token.value()) {
+                info!("wordlist incorrect");
+                action = Some(CORRECTIVE_ACTION_GET_SUGGESTIONS);
+                replacement = None;
+            }
+
+            // Check add wordlist
+            if self.wordlists.contains_add(token.value()) {
+                info!("wordlist added");
+                action = None;
+            } else {
+                // Query speller API
+                if action.is_none() && !self.speller_cache.to_owned().is_correct(token.value()) {
+                    action = Some(CORRECTIVE_ACTION_GET_SUGGESTIONS);
+                    replacement = None;
+                }
+            }
+
+            if action.is_none() {
+                continue;
+            }
 
             let error = DivvunSpellingError::new(
                 (tokenizer_start + token.start()) as u32,
                 (token.end() - token.start()) as u32,
-                CORRECTIVE_ACTION_GET_SUGGESTIONS,
-                None
+                action.unwrap(),
+                replacement
             );
 
-            // let error = DivvunSpellingError::new(
-            //     0,
-            //     4,
-            //     CORRECTIVE_ACTION_GET_SUGGESTIONS,
-            //     None
-            // );
+            info!("error {} {}", (tokenizer_start + token.start()) as u32, (token.end() - token.start()) as u32);
 
             unsafe { *value = error as *mut _; }
             info!("return");
@@ -171,13 +184,14 @@ impl DivvunEnumSpellingError {
 }
 
 impl DivvunEnumSpellingError {
-    pub fn new(speller_cache: Arc<SpellerCache>, text: String) -> *mut DivvunEnumSpellingError {
+    pub fn new(speller_cache: Arc<SpellerCache>, wordlists: Arc<Wordlists>, text: String) -> *mut DivvunEnumSpellingError {
         let s = Self {
             __vtable: Box::new(Self::create_vtable()),
             refs: AtomicU32::new(1),
             speller_cache,
             text: Arc::new(text),
-            text_offset: 0
+            text_offset: 0,
+            wordlists
         };
 
         let ptr = Box::into_raw(Box::new(s));

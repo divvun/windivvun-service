@@ -12,6 +12,7 @@ log = "0.4"
 dirs = "1.0.4"
 glob = "0.2"
 lazy_static = "1.2.0"
+parking_lot = { version = "0.6", features = ["nightly"] }
 
 [dependencies.log4rs]
 version = "0.8.1"

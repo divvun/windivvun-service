@@ -68,4 +68,13 @@ impl DivvunSpellCheckProviderFactoryClassFactory {
 
         ptr as *mut _
     }
+
+    pub fn new_s() -> DivvunSpellCheckProviderFactoryClassFactory {
+        let s = Self {
+            __vtable: Box::new(Self::create_vtable()),
+            refs: AtomicU32::new(1)
+        };
+
+        s
+    }
 }

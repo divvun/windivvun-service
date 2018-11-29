@@ -9,6 +9,8 @@ extern crate com_impl;
 extern crate hfstospell;
 extern crate glob;
 
+extern crate parking_lot;
+
 #[macro_use]
 extern crate log;
 extern crate log4rs;
@@ -42,8 +44,11 @@ use spell_impl::ClassFactory::DivvunSpellCheckProviderFactoryClassFactory;
 
 mod speller_repository;
 mod speller_cache;
+mod wordlists;
 
 use speller_repository::SpellerRepository;
+
+use std::panic;
 
 lazy_static! {
     pub static ref SPELLER_REPOSITORY: SpellerRepository = {
@@ -86,12 +91,17 @@ pub extern "stdcall" fn DllCanUnloadNow() -> HRESULT {
     info!("DllCanUnloadNow");
     // TODO: HMMMMMMMM
     S_FALSE
+    //S_OK
 }
 
 #[no_mangle]
 pub extern "stdcall" fn DllMain(module: u32, reason_for_call: u32, reserved: PVOID) -> bool {
     match reason_for_call {
         DLL_PROCESS_ATTACH => {
+            panic::set_hook(Box::new(|_| {
+                info!("Custom panic hook");
+            }));
+
             initialize_logging();
 
             info!("Library loaded! procid = {}", std::process::id());
@@ -114,6 +124,8 @@ pub extern "stdcall" fn DllGetClassObject(rclsid: REFCLSID, riid: REFIID, ppv: *
 
         info!("DllGetClassObject");
 
+        info!("rclsid: {}", fmt_guid(&*rclsid));
+        info!("riid {}", fmt_guid(&*riid));
         if IsEqualGUID(&*riid, &IClassFactory::uuidof()) {
             let fac = DivvunSpellCheckProviderFactoryClassFactory::new();
             *ppv = fac as PVOID;
@@ -122,10 +134,6 @@ pub extern "stdcall" fn DllGetClassObject(rclsid: REFCLSID, riid: REFIID, ppv: *
         }
 
         error!("Invalid interface requested");
-        info!("rclsid: {}", fmt_guid(&*rclsid));
-        info!("riid {}", fmt_guid(&*riid));
-        info!("want {}", fmt_guid(&ISpellCheckProviderFactory::uuidof()));
-        info!("want {:?}", IsEqualGUID(&ISpellCheckProviderFactory::uuidof(), &*rclsid));
     }
 
     return CLASS_E_CLASSNOTAVAILABLE;
