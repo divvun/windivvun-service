@@ -10,7 +10,7 @@ macro_rules! IMPL_UNKNOWN {
 
             *obj = 0;
 
-            info!("QueryInterface {}", ::util::fmt_guid(riid));
+            //info!("QueryInterface {}", ::util::fmt_guid(riid));
             if IsEqualGUID(riid, &<$x>::uuidof()) || IsEqualGUID(riid, &IUnknown::uuidof()) {
                 *obj = self as *mut _ as usize;
                 self.AddRef();

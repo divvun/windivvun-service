@@ -24,6 +24,8 @@ use hfstospell::archive::SpellerArchive;
 
 use ::SPELLER_REPOSITORY;
 use ::util;
+use ::speller_cache::SpellerCache;
+
 use super::EnumString::EnumString;
 use super::EnumSpellingError::DivvunEnumSpellingError;
 
@@ -38,7 +40,8 @@ ENUM!{enum WORDLIST_TYPE {
 pub struct DivvunSpellCheckProvider {
     refs: AtomicU32,
     language_tag: String,
-    speller: Arc<Speller>
+    speller: Arc<Speller>,
+    speller_cache: Arc<SpellerCache>
 }
 
 IMPL_UNKNOWN!(ISpellCheckProvider, DivvunSpellCheckProvider);
@@ -58,7 +61,7 @@ impl DivvunSpellCheckProvider {
 
     info!("Check {}", text);
 
-    let enum_err = DivvunEnumSpellingError::new(self.speller.to_owned(), text);
+    let enum_err = DivvunEnumSpellingError::new(self.speller_cache.to_owned(), text);
     unsafe { *value = enum_err as *mut _; }
 
     S_OK
@@ -68,17 +71,9 @@ impl DivvunSpellCheckProvider {
     let word = com_wstr_ptr!(word);
 
     info!("Suggest {}", word);
-    let speller_config = SpellerConfig {
-      n_best: 5,
-      max_weight: 50,
-      beam: None
-    };
 
-    let mut speller_suggestions = self.speller.to_owned().suggest_with_config(&word, &speller_config);
-    speller_suggestions.sort_unstable_by(|a, b| a.partial_cmp(b).unwrap());
-    
-    let mut suggestions = speller_suggestions.iter().map(|s| s.value().to_string()).collect::<Vec<String>>();
-    info!("{} suggestions", suggestions.len());
+    let mut suggestions = self.speller_cache.to_owned().suggest(&word);
+    info!("{} suggestions: {:?}", suggestions.len(), suggestions);
 
     //std::thread::sleep(std::time::Duration::from_millis(2000));
 
@@ -87,8 +82,6 @@ impl DivvunSpellCheckProvider {
       suggestions.push(word);
       result = S_FALSE;
     }
-
-    info!("create");
 
     let enum_if = EnumString::new(suggestions);
     unsafe { *value = enum_if as *mut _; }
@@ -188,7 +181,8 @@ impl DivvunSpellCheckProvider {
         __vtable: Box::new(Self::create_vtable()),
         refs: AtomicU32::new(1),
         language_tag: language_tag.to_string(),
-        speller: speller.clone()
+        speller: speller.clone(),
+        speller_cache: SpellerCache::new(speller)
     };
 
     let ptr = Box::into_raw(Box::new(s));

@@ -99,9 +99,7 @@ pub fn resolve_locale_name(tag: &str) -> Option<String> {
     };
     
     if ret == 0 {
-        let err = io::Error::last_os_error();
-        error!("{:?}", err);
-        panic!();
+        return None;
     }
 
     buf.truncate(ret as usize - 1);

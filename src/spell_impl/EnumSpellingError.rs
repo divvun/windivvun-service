@@ -22,6 +22,7 @@ use hfstospell::tokenizer::{Tokenize, Token};
 use std::sync::Arc;
 use std::ffi::OsString;
 use ::util;
+use ::speller_cache::SpellerCache;
 
 #[interface(ISpellingError)]
 pub struct DivvunSpellingError {
@@ -96,9 +97,9 @@ impl DivvunSpellingError {
 #[interface(IEnumSpellingError)]
 pub struct DivvunEnumSpellingError {
     refs: AtomicU32,
-    speller: Arc<Speller>,
+    speller_cache: Arc<SpellerCache>,
     text: Arc<String>,
-    text_offset: usize
+    text_offset: usize,
 }
 
 IMPL_UNKNOWN!(IEnumSpellingError, DivvunEnumSpellingError);
@@ -107,61 +108,62 @@ IMPL_UNKNOWN!(IEnumSpellingError, DivvunEnumSpellingError);
 impl DivvunEnumSpellingError {
     fn Next(&mut self, value: *mut *mut ISpellingError) -> HRESULT {
         info!("Next");
-        let speller_config = SpellerConfig {
-            n_best: 2,
-            max_weight: 50,
-            beam: None
-        };
-            
-        let tokenizer = self.text[self.text_offset..].tokenize();
-        let tokens = tokenizer.filter_map(|t| {
-        info!("rtoken {:?}", t);
-        match t {
+
+        let tokenizer_start = self.text_offset;
+        let tokenizer = self.text[tokenizer_start..].tokenize();
+        let tokens = tokenizer.filter_map(|t| match t {
             Token::Word(_, _, _) => Some(t),
             _ => None
-        }});
+        });
         
         for token in tokens {
             info!("Token {:?}", token);
-            self.text_offset = token.end();
+            self.text_offset = tokenizer_start + token.end();
 
-            let speller = self.speller.to_owned();
-
-            if speller.is_correct(token.value()) {
+            let now = std::time::Instant::now();
+            if self.speller_cache.to_owned().is_correct(token.value()) {
+                info!("is correct");
                 continue;
             }
+
+            info!("is_correct time {}", now.elapsed().as_millis());
             
-            let mut speller_suggestions = speller.suggest(token.value());
-            speller_suggestions.sort_unstable_by(|a, b| a.partial_cmp(b).unwrap());
-            //info!("suggestions {:?}", speller_suggestions);
-            let suggestions = speller_suggestions.iter().map(|s| s.value().to_string()).collect::<Vec<String>>();
+            // let suggestions = self.speller_cache.to_owned().suggest(token.value());
+            // info!("total time {}", now.elapsed().as_millis());
+            // info!("suggestions {:?}", suggestions);
 
-            if suggestions.len() != 0 {
-                let action = if suggestions.len() == 1 {
-                    CORRECTIVE_ACTION_REPLACE
-                } else {
-                    CORRECTIVE_ACTION_GET_SUGGESTIONS
-                };
+            // let action = if suggestions.len() == 1 {
+            //     CORRECTIVE_ACTION_REPLACE
+            // } else {
+            //     CORRECTIVE_ACTION_GET_SUGGESTIONS
+            // };
 
-                let suggestion = if suggestions.len() == 1 {
-                    Some(suggestions[0].to_owned())
-                } else {
-                    None
-                };
+            // let suggestion = if suggestions.len() == 1 {
+            //     Some(suggestions[0].to_owned())
+            // } else {
+            //     None
+            // };
 
-                info!("error {:?} {:?}", action, suggestion);
+            info!("error {} {}", (tokenizer_start + token.start()) as u32, (token.end() - token.start()) as u32);
+            //info!("{}, {}", token.start(), token.end());
 
-                let error = DivvunSpellingError::new(
-                    token.start() as u32,
-                    (token.start() - token.end()) as u32,
-                    action,
-                    suggestion
-                );
+            let error = DivvunSpellingError::new(
+                (tokenizer_start + token.start()) as u32,
+                (token.end() - token.start()) as u32,
+                CORRECTIVE_ACTION_GET_SUGGESTIONS,
+                None
+            );
 
-                unsafe { *value = error as *mut _; }
-                info!("return");
-                return S_OK;
-            }
+            // let error = DivvunSpellingError::new(
+            //     0,
+            //     4,
+            //     CORRECTIVE_ACTION_GET_SUGGESTIONS,
+            //     None
+            // );
+
+            unsafe { *value = error as *mut _; }
+            info!("return");
+            return S_OK;
         }
 
         S_FALSE
@@ -169,11 +171,11 @@ impl DivvunEnumSpellingError {
 }
 
 impl DivvunEnumSpellingError {
-    pub fn new(speller: Arc<Speller>, text: String) -> *mut DivvunEnumSpellingError {
+    pub fn new(speller_cache: Arc<SpellerCache>, text: String) -> *mut DivvunEnumSpellingError {
         let s = Self {
             __vtable: Box::new(Self::create_vtable()),
             refs: AtomicU32::new(1),
-            speller,
+            speller_cache,
             text: Arc::new(text),
             text_offset: 0
         };

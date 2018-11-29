@@ -1,4 +1,6 @@
 #![feature(integer_atomics)]
+#![feature(duration_as_u128)]
+#![feature(arbitrary_self_types)]
 #![allow(unused_variables)]
 
 #[macro_use]
@@ -39,6 +41,7 @@ use winapi::um::unknwnbase::{IClassFactory};
 use spell_impl::ClassFactory::DivvunSpellCheckProviderFactoryClassFactory;
 
 mod speller_repository;
+mod speller_cache;
 
 use speller_repository::SpellerRepository;
 
@@ -131,7 +134,11 @@ pub extern "stdcall" fn DllGetClassObject(rclsid: REFCLSID, riid: REFIID, ppv: *
 #[test]
 fn things() {
     //test("hello world");
-    println!("{:?}", util::get_module_path());
+    use hfstospell::archive::SpellerArchive;
+    let archive = SpellerArchive::new(r"C:\Program Files\SpellCheckTest\dicts\se.zhfst").unwrap();
+    let speller = archive.speller();
+    //println!("a {:?}", speller.clone().is_correct("heallu"));
+    //println!("b {:?}", speller.clone().suggest("heallu"));
 }
 
 #[test]
