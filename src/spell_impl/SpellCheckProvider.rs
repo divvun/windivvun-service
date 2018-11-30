@@ -108,8 +108,17 @@ impl DivvunSpellCheckProvider {
     // Check speller result
     if result.is_none() {
       result = Some(S_OK);
-      suggestions = self.speller_cache.to_owned().suggest(&word);
-      info!("speller {} suggestions: {:?}", suggestions.len(), suggestions);
+      if !self.speller_cache.is_correct(&word) {
+        let speller_suggestions = self.speller_cache.to_owned().suggest_cache_only(&word);
+        if let Some(speller_suggestions) = speller_suggestions {
+          suggestions = speller_suggestions;
+          info!("speller {} suggestions: {:?}", suggestions.len(), suggestions);
+        } else {
+          // No results available yet but word is incorrect
+          info!("no speller suggestions yet");
+          result = Some(S_OK);
+        }
+      }
 
       // No results, word is correct if no excludes in wordlist
       if suggestions.len() == 0 {
@@ -142,11 +151,6 @@ impl DivvunSpellCheckProvider {
 
   fn get_OptionIds(&mut self, value: *mut *mut IEnumString) -> HRESULT {
     info!("get_OptionIds");
-    // return empty list
-    // or: SpellerConfig
-    // pub n_best: Option<usize>,
-    // pub max_weight: Option<Weight>,
-    // pub beam: Option<Weight>,
     let enum_if = EnumString::new(vec![]);
     unsafe { *value = enum_if as *mut _; }
     S_OK

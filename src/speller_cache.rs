@@ -88,6 +88,15 @@ impl SpellerCache {
         is_correct
     }
 
+    pub fn suggest_cache_only(self: &Arc<Self>, word: &str) -> Option<Vec<String>> {
+        let lock = self.suggestions.read();
+        let result = lock.get(word);
+        if result.is_none() {
+            self.prime(word);
+        }
+        return result.cloned();
+    }
+
     pub fn suggest(self: &Arc<Self>, word: &str) -> Vec<String> {
         {
             let lock = self.suggestions.read();

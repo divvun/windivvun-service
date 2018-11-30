@@ -8,26 +8,28 @@ use hfstospell::archive::SpellerArchive;
 use util;
 
 pub struct SpellerRepository {
-    base_directory: String,
+    base_directories: Vec<String>,
 }
 
 impl SpellerRepository {
-    pub fn new(base_directory: &str) -> Self {
+    pub fn new(base_directories: Vec<String>) -> Self {
         SpellerRepository {
-            base_directory: base_directory.to_string()
+            base_directories
         }
     }
 
     pub fn get_speller_archives(&self) -> Vec<PathBuf> {
-        let mut path: PathBuf = [&self.base_directory, "**/*.zhfst"].iter().collect();
-        info!("Enumerate dictionaries in {:?}", path.display());
-        glob_with(path.to_str().unwrap(), &MatchOptions {
-            case_sensitive: false,
-            require_literal_leading_dot: false,
-            require_literal_separator: false
-        }).map(|paths|
-            paths.filter_map(|i| i.ok())
-        ).unwrap().collect()
+        self.base_directories.iter().flat_map(|base_directory| {
+            let mut path: PathBuf = [base_directory, "**/*.zhfst"].iter().collect();
+            info!("Enumerate dictionaries in {:?}", path.display());
+            glob_with(path.to_str().unwrap(), &MatchOptions {
+                case_sensitive: false,
+                require_literal_leading_dot: false,
+                require_literal_separator: false
+            }).map(|paths|
+                paths.filter_map(|i| i.ok())
+            ).unwrap()
+        }).collect()
     }
 
     pub fn get_supported_languages(&self) -> Vec<String> {

@@ -5,6 +5,7 @@ use winapi::shared::guiddef::GUID;
 use winapi::um::winnls::ResolveLocaleName;
 use winapi::ctypes::c_int;
 use winapi::um::combaseapi::CoTaskMemAlloc;
+use winapi::um::winbase;
 use std::mem;
 use winapi::shared::wtypesbase::{LPOLESTR, OLECHAR};
 
@@ -24,7 +25,7 @@ pub fn to_u16s<S: AsRef<OsStr>>(s: S) -> io::Result<Vec<u16>> {
 }
 
 pub unsafe fn u16_ptr_to_string(ptr: *const u16) -> OsString {
-    let len = (0..).take_while(|&i| *ptr.offset(i) != 0).count();
+    let len = winbase::lstrlenW(ptr) as usize;
     let slice = std::slice::from_raw_parts(ptr, len);
 
     OsString::from_wide(slice)

@@ -54,7 +54,7 @@ lazy_static! {
     pub static ref SPELLER_REPOSITORY: SpellerRepository = {
         let mut path = PathBuf::from(util::get_module_path().unwrap()).parent().unwrap().to_path_buf();
         path.push("dicts");
-        SpellerRepository::new(path.to_str().unwrap())
+        SpellerRepository::new(vec![path.to_str().unwrap().to_string()])
     };
 }
 
@@ -94,6 +94,31 @@ pub extern "stdcall" fn DllCanUnloadNow() -> HRESULT {
     //S_OK
 }
 
+
+use self::winapi::shared::winerror;
+use self::winapi::um::knownfolders;
+use self::winapi::um::combaseapi;
+use self::winapi::um::shlobj;
+use self::winapi::um::shtypes;
+use self::winapi::um::winbase;
+use self::winapi::um::winnt;
+fn known_folder(folder_id: shtypes::REFKNOWNFOLDERID) -> Option<PathBuf> {
+    unsafe {
+        let mut path_ptr: winnt::PWSTR = std::ptr::null_mut();
+        let result = shlobj::SHGetKnownFolderPath(folder_id, 0, std::ptr::null_mut(), &mut path_ptr);
+        if result == winerror::S_OK {
+            let len = winbase::lstrlenW(path_ptr) as usize;
+            let path = std::slice::from_raw_parts(path_ptr, len);
+            let ostr: std::ffi::OsString = std::os::windows::ffi::OsStringExt::from_wide(path);
+            combaseapi::CoTaskMemFree(path_ptr as *mut winapi::ctypes::c_void);
+            Some(PathBuf::from(ostr))
+        } else {
+            info!("err code {}", result);
+            None
+        }
+    }
+}
+
 #[no_mangle]
 pub extern "stdcall" fn DllMain(module: u32, reason_for_call: u32, reserved: PVOID) -> bool {
     match reason_for_call {
@@ -107,6 +132,7 @@ pub extern "stdcall" fn DllMain(module: u32, reason_for_call: u32, reserved: PVO
             info!("Library loaded! procid = {}", std::process::id());
             info!("{:?}", std::env::current_dir());
             info!("{:?}", std::env::current_exe());
+            info!("{:?}", known_folder(&knownfolders::FOLDERID_RoamingAppData));
             info!("prj {:?}", directories::ProjectDirs::from("com", "Divvun", "System Spell Checker"));
             for (key, value) in std::env::vars() {
                 info!("{}: {}", key, value);
@@ -129,6 +155,7 @@ pub extern "stdcall" fn DllGetClassObject(rclsid: REFCLSID, riid: REFIID, ppv: *
 
         info!("DllGetClassObject");
 
+            info!("{:?}", known_folder(&knownfolders::FOLDERID_RoamingAppData));
         info!("rclsid: {}", fmt_guid(&*rclsid));
         info!("riid {}", fmt_guid(&*riid));
         if IsEqualGUID(&*riid, &IClassFactory::uuidof()) {
@@ -148,8 +175,8 @@ pub extern "stdcall" fn DllGetClassObject(rclsid: REFCLSID, riid: REFIID, ppv: *
 fn things() {
     //test("hello world");
     use hfstospell::archive::SpellerArchive;
-    let archive = SpellerArchive::new(r"C:\Program Files\SpellCheckTest\dicts\se.zhfst").unwrap();
-    let speller = archive.speller();
+    // let archive = SpellerArchive::new(r"C:\Program Files\SpellCheckTest\dicts\se.zhfst").unwrap();
+    // let speller = archive.speller();
     //println!("a {:?}", speller.clone().is_correct("heallu"));
     //println!("b {:?}", speller.clone().suggest("heallu"));
 }
