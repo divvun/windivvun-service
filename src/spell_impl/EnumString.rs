@@ -37,7 +37,7 @@ impl EnumString {
 
         info!("{} values fetched", values.len());
 
-        if values.len() == 0 {
+        if values.is_empty() {
             return S_FALSE;
         }
 
@@ -45,12 +45,12 @@ impl EnumString {
             return E_UNEXPECTED;
         }
 
-        self.offset = self.offset + values.len();
+        self.offset += values.len();
 
         unsafe {
             for (i, item) in values.iter().enumerate() {
                 let elem_str = util::alloc_com_str(item).unwrap();
-                *rgelt.offset(i as isize) = elem_str;
+                *rgelt.add(i) = elem_str;
             }
 
             if !pceltFetched.is_null() {
@@ -67,7 +67,7 @@ impl EnumString {
 
     fn Skip(&mut self, celt: ULONG) -> HRESULT {
         info!("skip {}", celt);
-        self.offset = self.offset +  celt as usize;
+        self.offset += celt as usize;
         S_OK
     }
     

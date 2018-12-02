@@ -67,10 +67,8 @@ impl SpellerCache {
 
     pub fn prime(self: &Arc<Self>, word: &str) {
         info!("Attempting to prime {}", word);
-        if !self.suggestions.read().contains_key(word) {
-            if self.sender.send(word.to_string()).is_err() {
-                error!("Failed to send prime word");
-            }
+        if !self.suggestions.read().contains_key(word) && self.sender.send(word.to_string()).is_err() {
+            error!("Failed to send prime word");
         }
     }
 
@@ -94,7 +92,8 @@ impl SpellerCache {
         if result.is_none() {
             self.prime(word);
         }
-        return result.cloned();
+        
+        result.cloned()
     }
 
     pub fn suggest(self: &Arc<Self>, word: &str) -> Vec<String> {

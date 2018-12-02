@@ -73,14 +73,14 @@ fn initialize_logging() -> Option<()> {
 }
 
 #[no_mangle]
-pub extern "stdcall" fn DllCanUnloadNow() -> HRESULT {
+extern "stdcall" fn DllCanUnloadNow() -> HRESULT {
     info!("DllCanUnloadNow");
     // TODO: HMMMMMMMM
     S_FALSE
 }
 
 #[no_mangle]
-pub extern "stdcall" fn DllMain(module: u32, reason_for_call: u32, reserved: PVOID) -> bool {
+extern "stdcall" fn DllMain(module: u32, reason_for_call: u32, reserved: PVOID) -> bool {
     match reason_for_call {
         DLL_PROCESS_ATTACH => {
             initialize_logging();
@@ -101,11 +101,11 @@ pub extern "stdcall" fn DllMain(module: u32, reason_for_call: u32, reserved: PVO
         _ => ()
     } 
 
-    return true;
+    true
 }
 
 #[no_mangle]
-pub extern "stdcall" fn DllGetClassObject(rclsid: REFCLSID, riid: REFIID, ppv: *mut PVOID) -> HRESULT {
+extern "stdcall" fn DllGetClassObject(rclsid: REFCLSID, riid: REFIID, ppv: *mut PVOID) -> HRESULT {
     unsafe {
         *ppv = std::ptr::null_mut();
 
@@ -123,28 +123,5 @@ pub extern "stdcall" fn DllGetClassObject(rclsid: REFCLSID, riid: REFIID, ppv: *
         error!("Invalid interface requested");
     }
 
-    return CLASS_E_CLASSNOTAVAILABLE;
-}
-
-#[test]
-fn things() {
-    //test("hello world");
-    use hfstospell::archive::SpellerArchive;
-    // let archive = SpellerArchive::new(r"C:\Program Files\SpellCheckTest\dicts\se.zhfst").unwrap();
-    // let speller = archive.speller();
-    //println!("a {:?}", speller.clone().is_correct("heallu"));
-    //println!("b {:?}", speller.clone().suggest("heallu"));
-}
-
-#[test]
-fn name_resolve() {
-    let tag = util::resolve_locale_name("en");
-    println!("res {:?}", tag);
-    let tag = util::resolve_locale_name("smj");
-    println!("res {:?}", tag);
-
-    println!("{:?}", SPELLER_REPOSITORY.get_speller_archives());
-
-    println!("{:?}", SPELLER_REPOSITORY.get_supported_languages());
-    //rep.add_dictionary("sv-SE", r"C:\Program Files\SpellCheckTest\dicts\sme.zhfst");
+    CLASS_E_CLASSNOTAVAILABLE
 }

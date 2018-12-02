@@ -66,7 +66,7 @@ impl DivvunSpellingError {
         corrective_action: u32,
         replacement: Option<String>
     ) -> *mut DivvunSpellingError {
-        let replacement = replacement.map_or(vec!(), |r| util::to_u16s(r).unwrap_or(vec!()));
+        let replacement = replacement.map_or(vec!(), |r| util::to_u16s(r).unwrap_or_else(|_| vec!()));
 
         let s = Self {
             __vtable: Box::new(Self::create_vtable()),
@@ -122,15 +122,12 @@ impl DivvunEnumSpellingError {
             let mut replacement: Option<String> = None;
 
             // Check auto correct wordlist
-            match self.wordlists.get_replacement(token.value()) {
-                Some(r) => {
-                    info!("wordlist replace {}", r);
+            if let Some(r) = self.wordlists.get_replacement(token.value()) {
+                info!("wordlist replace {}", r);
 
-                    action = Some(CORRECTIVE_ACTION_REPLACE);
-                    replacement = Some(r);  
-                },
-                _ => ()
-            };
+                action = Some(CORRECTIVE_ACTION_REPLACE);
+                replacement = Some(r);  
+            }
 
             // Check exclude wordlist
             if action.is_none() && self.wordlists.contains_exclude(token.value()) {
@@ -192,10 +189,13 @@ impl DivvunEnumSpellingError {
 
 #[test]
 fn tokens() {
-    let res: Vec<Token> = "Hello world how are you doing".tokenize().filter_map(|t| match t {
-        Token::Word(_, _, _) => Some(t),
-        _ => None
-    }).collect();
+    let res: Vec<Token> = "Hello world how are you doing".tokenize().filter_map(|t|
+        if let Token::Word(_, _, _) = t {
+            Some(t)
+        } else {
+            None
+        }
+    ).collect();
 
     for r in res {
         println!("{:?}", r);

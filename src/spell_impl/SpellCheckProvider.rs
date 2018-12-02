@@ -88,13 +88,10 @@ impl DivvunSpellCheckProvider {
 
     // Check auto correct wordlist. TODO: should the speller's suggestions be appended to this perhaps?
     if result.is_none() {
-      match self.wordlists.get_replacement(&word) {
-        Some(replacement) => {
-          info!("wordlist replacement {}", replacement);
-          suggestions.push(replacement);
-          result = Some(S_OK);
-        },
-        _ => ()
+      if let Some(replacement) = self.wordlists.get_replacement(&word) {
+        info!("wordlist replacement {}", replacement);
+        suggestions.push(replacement);
+        result = Some(S_OK);
       }
     }
 
@@ -121,7 +118,7 @@ impl DivvunSpellCheckProvider {
       }
 
       // No results, word is correct if no excludes in wordlist
-      if suggestions.len() == 0 {
+      if suggestions.is_empty() {
         // Check exclude wordlist (no suggestions but the word is incorrect)
         if !self.wordlists.contains_exclude(&word) {
           info!("wordlist exclude");
@@ -207,7 +204,7 @@ impl DivvunSpellCheckProvider {
       WORDLIST_TYPE_AUTOCORRECT => {
         let mut map: HashMap<String, String> = HashMap::new();
         for word in words_vec {
-          let tokens = word.split("\t").collect::<Vec<&str>>();
+          let tokens = word.split('\t').collect::<Vec<&str>>();
           if tokens.len() == 2 {
             map.insert(tokens[0].to_string(), tokens[1].to_string());
           } else {

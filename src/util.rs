@@ -106,7 +106,7 @@ pub fn resolve_locale_name(tag: &str) -> Option<String> {
 
     buf.truncate(ret as usize - 1);
 
-    if buf.len() == 0 {
+    if buf.is_empty() {
         return None;
     }
 
