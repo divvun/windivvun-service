@@ -1,25 +1,28 @@
 #![cfg(windows)] 
 #![allow(non_snake_case)]
 
-use winapi::um::winnt::{LPCWSTR, HRESULT};
-use winapi::shared::ntdef::ULONG;
-use winapi::shared::winerror::{S_OK, S_FALSE};
 use winapi::shared::guiddef::{IsEqualGUID, GUID};
+use winapi::shared::ntdef::ULONG;
+use winapi::shared::winerror::{S_FALSE, S_OK};
+use winapi::um::winnt::{HRESULT, LPCWSTR};
 
 use winapi::um::unknwnbase::{IUnknown, IUnknownVtbl};
 
 use std::sync::atomic::{AtomicU32, Ordering};
 
-use spellcheckprovider::{IEnumSpellingError, IEnumSpellingErrorVtbl, ISpellingError, ISpellingErrorVtbl, CORRECTIVE_ACTION_REPLACE, CORRECTIVE_ACTION_GET_SUGGESTIONS};
+use spellcheckprovider::{
+    IEnumSpellingError, IEnumSpellingErrorVtbl, ISpellingError, ISpellingErrorVtbl,
+    CORRECTIVE_ACTION_GET_SUGGESTIONS, CORRECTIVE_ACTION_REPLACE,
+};
 
-use com_impl::{ComInterface, interface, implementation};
+use com_impl::{implementation, interface, ComInterface};
 
-use hfstospell::tokenizer::{Tokenize, Token};
+use hfstospell::tokenizer::{Token, Tokenize};
 
+use speller_cache::SpellerCache;
 use std::sync::Arc;
-use ::util;
-use ::speller_cache::SpellerCache;
-use ::wordlists::Wordlists;
+use util;
+use wordlists::Wordlists;
 
 #[interface(ISpellingError)]
 pub struct DivvunSpellingError {
@@ -27,7 +30,7 @@ pub struct DivvunSpellingError {
     start_index: u32,
     length: u32,
     corrective_action: u32,
-    replacement: Vec<u16>
+    replacement: Vec<u16>,
 }
 
 IMPL_UNKNOWN!(ISpellingError, DivvunSpellingError);
@@ -35,25 +38,35 @@ IMPL_UNKNOWN!(ISpellingError, DivvunSpellingError);
 #[implementation(ISpellingError)]
 impl DivvunSpellingError {
     fn get_StartIndex(&mut self, value: *mut u32) -> HRESULT {
-        unsafe { *value = self.start_index; }
+        unsafe {
+            *value = self.start_index;
+        }
         S_OK
     }
 
     fn get_Length(&mut self, value: *mut u32) -> HRESULT {
-        unsafe { *value = self.length; }
+        unsafe {
+            *value = self.length;
+        }
         S_OK
     }
 
     fn get_CorrectiveAction(&mut self, value: *mut u32) -> HRESULT {
-        unsafe { *value = self.corrective_action; }
+        unsafe {
+            *value = self.corrective_action;
+        }
         S_OK
     }
 
     fn get_Replacement(&mut self, value: *mut LPCWSTR) -> HRESULT {
         if self.corrective_action != CORRECTIVE_ACTION_REPLACE {
-            unsafe { *value = std::ptr::null_mut(); }
+            unsafe {
+                *value = std::ptr::null_mut();
+            }
         } else {
-            unsafe { *value = self.replacement.as_ptr(); }
+            unsafe {
+                *value = self.replacement.as_ptr();
+            }
         }
         S_OK
     }
@@ -64,19 +77,20 @@ impl DivvunSpellingError {
         start_index: u32,
         length: u32,
         corrective_action: u32,
-        replacement: Option<String>
+        replacement: Option<String>,
     ) -> *mut DivvunSpellingError {
-        let replacement = replacement.map_or(vec!(), |r| util::to_u16s(r).unwrap_or_else(|_| vec!()));
+        let replacement =
+            replacement.map_or(vec![], |r| util::to_u16s(r).unwrap_or_else(|_| vec![]));
 
         let s = Self {
             __vtable: Box::new(Self::create_vtable()),
             refs: AtomicU32::new(1),
-            
+
             start_index,
             length,
             corrective_action,
-            
-            replacement
+
+            replacement,
         };
 
         let ptr = Box::into_raw(Box::new(s));
@@ -91,7 +105,7 @@ pub struct DivvunEnumSpellingError {
     speller_cache: Arc<SpellerCache>,
     text: Arc<String>,
     text_offset: usize,
-    wordlists: Arc<Wordlists>
+    wordlists: Arc<Wordlists>,
 }
 
 IMPL_UNKNOWN!(IEnumSpellingError, DivvunEnumSpellingError);
@@ -105,9 +119,9 @@ impl DivvunEnumSpellingError {
         let tokenizer = self.text[tokenizer_start..].tokenize();
         let tokens = tokenizer.filter_map(|t| match t {
             Token::Word(_, _, _) => Some(t),
-            _ => None
+            _ => None,
         });
-        
+
         for token in tokens {
             info!("Token {:?}", token);
             self.text_offset = tokenizer_start + token.end();
@@ -126,7 +140,7 @@ impl DivvunEnumSpellingError {
                 info!("wordlist replace {}", r);
 
                 action = Some(CORRECTIVE_ACTION_REPLACE);
-                replacement = Some(r);  
+                replacement = Some(r);
             }
 
             // Check exclude wordlist
@@ -157,12 +171,17 @@ impl DivvunEnumSpellingError {
                 (tokenizer_start + token.start()) as u32,
                 (token.end() - token.start()) as u32,
                 action.unwrap(),
-                replacement.to_owned()
+                replacement.to_owned(),
             );
 
-            info!("token {:?}, error action: {:?}, replacement {:?}", token, action, replacement);
+            info!(
+                "token {:?}, error action: {:?}, replacement {:?}",
+                token, action, replacement
+            );
 
-            unsafe { *value = error as *mut _; }
+            unsafe {
+                *value = error as *mut _;
+            }
             return S_OK;
         }
 
@@ -171,14 +190,18 @@ impl DivvunEnumSpellingError {
 }
 
 impl DivvunEnumSpellingError {
-    pub fn new(speller_cache: Arc<SpellerCache>, wordlists: Arc<Wordlists>, text: String) -> *mut DivvunEnumSpellingError {
+    pub fn new(
+        speller_cache: Arc<SpellerCache>,
+        wordlists: Arc<Wordlists>,
+        text: String,
+    ) -> *mut DivvunEnumSpellingError {
         let s = Self {
             __vtable: Box::new(Self::create_vtable()),
             refs: AtomicU32::new(1),
             speller_cache,
             text: Arc::new(text),
             text_offset: 0,
-            wordlists
+            wordlists,
         };
 
         let ptr = Box::into_raw(Box::new(s));
@@ -189,13 +212,16 @@ impl DivvunEnumSpellingError {
 
 #[test]
 fn tokens() {
-    let res: Vec<Token> = "Hello world how are you doing".tokenize().filter_map(|t|
-        if let Token::Word(_, _, _) = t {
-            Some(t)
-        } else {
-            None
-        }
-    ).collect();
+    let res: Vec<Token> = "Hello world how are you doing"
+        .tokenize()
+        .filter_map(|t| {
+            if let Token::Word(_, _, _) = t {
+                Some(t)
+            } else {
+                None
+            }
+        })
+        .collect();
 
     for r in res {
         println!("{:?}", r);

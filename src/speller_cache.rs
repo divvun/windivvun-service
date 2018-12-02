@@ -1,29 +1,32 @@
 use hfstospell::speller::{Speller, SpellerConfig};
 
-use std::collections::HashMap;
-use std::sync::Arc;
 use parking_lot::RwLock;
+use std::collections::HashMap;
+use std::sync::mpsc::{channel, Sender};
+use std::sync::Arc;
 use std::thread;
-use std::sync::mpsc::{Sender, channel};
 
 pub struct SpellerCache {
     speller: Arc<Speller>,
     //speller_config: SpellerConfig,
     is_correct: RwLock<HashMap<String, bool>>,
     suggestions: Arc<RwLock<HashMap<String, Vec<String>>>>,
-    sender: Sender<String>
+    sender: Sender<String>,
 }
 
 fn suggest_internal(speller: &Arc<Speller>, word: &str) -> Vec<String> {
     let speller_config = SpellerConfig {
         n_best: Some(5),
         max_weight: Some(50.0),
-        beam: None
+        beam: None,
     };
-    
-    let res: Vec<String> = speller.to_owned()
+
+    let res: Vec<String> = speller
+        .to_owned()
         .suggest_with_config(word, &speller_config)
-        .iter().map(|s| s.value().to_string()).collect();
+        .iter()
+        .map(|s| s.value().to_string())
+        .collect();
     res
 }
 
@@ -53,7 +56,7 @@ impl SpellerCache {
                         let mut lock = suggestions.write();
                         lock.insert(word.to_string(), result);
                         info!("Primed {}", word);
-                    },
+                    }
                     err => {
                         info!("Prime loop ending: {:?}", err);
                         return;
@@ -67,7 +70,9 @@ impl SpellerCache {
 
     pub fn prime(self: &Arc<Self>, word: &str) {
         info!("Attempting to prime {}", word);
-        if !self.suggestions.read().contains_key(word) && self.sender.send(word.to_string()).is_err() {
+        if !self.suggestions.read().contains_key(word)
+            && self.sender.send(word.to_string()).is_err()
+        {
             error!("Failed to send prime word");
         }
     }
@@ -92,7 +97,7 @@ impl SpellerCache {
         if result.is_none() {
             self.prime(word);
         }
-        
+
         result.cloned()
     }
 
@@ -104,9 +109,11 @@ impl SpellerCache {
                 return result.unwrap().to_owned();
             }
         }
-        
+
         let result = suggest_internal(&self.speller, word);
-        self.suggestions.write().insert(word.to_string(), result.to_owned());
+        self.suggestions
+            .write()
+            .insert(word.to_string(), result.to_owned());
         result
     }
 }
@@ -118,7 +125,8 @@ mod tests {
     #[test]
     fn test() {
         use hfstospell::archive::SpellerArchive;
-        let archive = SpellerArchive::new(r"C:\Program Files\SpellCheckTest\dicts\se.zhfst").unwrap();
+        let archive =
+            SpellerArchive::new(r"C:\Program Files\SpellCheckTest\dicts\se.zhfst").unwrap();
         let speller = archive.speller();
 
         let cache = SpellerCache::new(speller);

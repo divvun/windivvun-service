@@ -3,26 +3,26 @@
 
 use winapi::um::winnt::HRESULT;
 
-use winapi::shared::ntdef::ULONG;
-use winapi::shared::winerror::{S_OK, S_FALSE, E_UNEXPECTED};
 use winapi::shared::guiddef::{IsEqualGUID, GUID};
+use winapi::shared::ntdef::ULONG;
+use winapi::shared::winerror::{E_UNEXPECTED, S_FALSE, S_OK};
 
-use winapi::um::unknwnbase::{IUnknown, IUnknownVtbl};
-use winapi::um::objidlbase::{IEnumString, IEnumStringVtbl};
 use winapi::shared::wtypesbase::LPOLESTR;
+use winapi::um::objidlbase::{IEnumString, IEnumStringVtbl};
+use winapi::um::unknwnbase::{IUnknown, IUnknownVtbl};
 
 use std::sync::atomic::{AtomicU32, Ordering};
 
-use com_impl::{ComInterface, interface, implementation};
+use com_impl::{implementation, interface, ComInterface};
 
 use std::vec::Vec;
-use ::util;
+use util;
 
 #[interface(IEnumString)]
 pub struct EnumString {
     refs: AtomicU32,
     values: Vec<String>,
-    offset: usize
+    offset: usize,
 }
 
 IMPL_UNKNOWN!(IEnumString, EnumString);
@@ -33,7 +33,12 @@ impl EnumString {
         let celt = celt as usize;
         info!("Next for {} values", celt);
 
-        let values = self.values.iter().skip(self.offset).take(celt).collect::<Vec<&String>>();
+        let values = self
+            .values
+            .iter()
+            .skip(self.offset)
+            .take(celt)
+            .collect::<Vec<&String>>();
 
         info!("{} values fetched", values.len());
 
@@ -70,7 +75,7 @@ impl EnumString {
         self.offset += celt as usize;
         S_OK
     }
-    
+
     fn Reset(&mut self) -> HRESULT {
         info!("reset");
         self.offset = 0;
@@ -98,7 +103,7 @@ impl EnumString {
             __vtable: Box::new(Self::create_vtable()),
             refs: AtomicU32::new(1),
             values,
-            offset
+            offset,
         };
 
         let ptr = Box::into_raw(Box::new(s));

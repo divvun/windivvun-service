@@ -1,12 +1,12 @@
-use std::collections::{HashSet, HashMap};
 use parking_lot::RwLock;
+use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 pub struct Wordlists {
     ignore: RwLock<HashSet<String>>,
     add: RwLock<HashSet<String>>,
     exclude: RwLock<HashSet<String>>,
-    auto_correct: RwLock<HashMap<String, String>>
+    auto_correct: RwLock<HashMap<String, String>>,
 }
 
 impl Wordlists {
@@ -38,19 +38,25 @@ impl Wordlists {
     pub fn set_ignore(self: &Arc<Self>, words: Vec<String>) {
         let mut list = self.ignore.write();
         list.clear();
-        for word in words { list.insert(word.to_string()); }
+        for word in words {
+            list.insert(word.to_string());
+        }
     }
 
     pub fn set_add(self: &Arc<Self>, words: Vec<String>) {
         let mut list = self.add.write();
         list.clear();
-        for word in words { list.insert(word.to_string()); }
+        for word in words {
+            list.insert(word.to_string());
+        }
     }
 
     pub fn set_exclude(self: &Arc<Self>, words: Vec<String>) {
         let mut list = self.exclude.write();
         list.clear();
-        for word in words { list.insert(word.to_string()); }
+        for word in words {
+            list.insert(word.to_string());
+        }
     }
 
     pub fn set_auto_correct(self: &Arc<Self>, words: HashMap<String, String>) {
