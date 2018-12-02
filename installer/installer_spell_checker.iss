@@ -10,6 +10,7 @@ Compression=lzma2
 SolidCompression=yes
 OutputDir=output
 ArchitecturesInstallIn64BitMode=x64
+OutputBaseFilename=divvun-spell-checker
 
 [Files]
 Source: "../target/release/winspellcheck.dll"; DestDir: "{app}"
