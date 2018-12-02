@@ -17,3 +17,7 @@ Open up the x86_64 compilation Visual Studio command line and run `cargo build`.
 - Windows Mail client. Needs some restarting sometimes with the correct keyboard layout active to actually use the correct language spell checker.
 - Skype??
 - Slack but it doesn't seem to care about changing keyboard layouts
+
+# Inno Setup Installers
+Run `build_installers.bat` with dictionaries downloaded into `dict`.
+

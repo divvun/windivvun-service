@@ -6,7 +6,6 @@ use std::io::prelude::*;
 fn main() {
     let out_dir: std::path::PathBuf = std::env::var_os("OUT_DIR").unwrap().into();
 
-    // TODO: find newest SDK folder here
     let idl_content = {
         let dir_iter =
             std::fs::read_dir(r"C:\Program Files (x86)\Windows Kits\10\Include\").unwrap();

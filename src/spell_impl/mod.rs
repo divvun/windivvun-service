@@ -20,13 +20,13 @@ macro_rules! IMPL_UNKNOWN {
 
             fn AddRef(&mut self) -> ULONG {
                 let prev = self.refs.fetch_add(1, Ordering::SeqCst);
-                info!("AddRef: {}", prev);
+                // info!("AddRef: {}", prev);
                 prev + 1
             }
 
             fn Release(&mut self) -> ULONG {
                 let prev = self.refs.fetch_sub(1, Ordering::SeqCst);
-                info!("Release: {}", prev);
+                // info!("Release: {}", prev);
                 if prev == 1 {
                     let _box = unsafe { Box::from_raw(self as *mut _) };
                 }

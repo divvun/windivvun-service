@@ -48,12 +48,33 @@ use speller_repository::SpellerRepository;
 
 lazy_static! {
     pub static ref SPELLER_REPOSITORY: SpellerRepository = {
-        let mut path = PathBuf::from(util::get_module_path().unwrap())
-            .parent()
-            .unwrap()
-            .to_path_buf();
-        path.push("dicts");
-        SpellerRepository::new(vec![path.to_str().unwrap().to_string()])
+        let mut dictionaries: Vec<String> = vec!();
+        // APPDATA dictionaries
+        {
+            if let Ok(mut path) = std::env::var("APPDATA").map(|p| PathBuf::from(p)) {
+                path.push("Divvun");
+                path.push("Spell Checker");
+                path.push("dicts");
+                if let Some(path) = path.to_str() {
+                    dictionaries.push(path.to_string());
+                }
+            }
+        }
+
+        // Program Files dictionaries
+        {
+            let mut path = PathBuf::from(util::get_module_path().unwrap())
+                .parent()
+                .unwrap()
+                .to_path_buf();
+            path.push("dicts");
+            if let Some(path) = path.to_str() {
+                dictionaries.push(path.to_string());
+            }
+        }
+        
+        info!("Initializing with speller repositories: {:?}", dictionaries);
+        SpellerRepository::new(dictionaries)
     };
 }
 
