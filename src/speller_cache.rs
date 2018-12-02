@@ -16,7 +16,6 @@ pub struct SpellerCache {
 }
 
 fn suggest_internal(speller: &Arc<Speller>, word: &str) -> Vec<String> {
-    info!("suggest internal {}", word);
     let speller_config = SpellerConfig {
         n_best: Some(5),
         max_weight: Some(50.0),
@@ -26,8 +25,6 @@ fn suggest_internal(speller: &Arc<Speller>, word: &str) -> Vec<String> {
     let res: Vec<String> = speller.to_owned()
         .suggest_with_config(word, &speller_config)
         .iter().map(|s| s.value().to_string()).collect();
-    
-    info!("suggs {:?}", res.clone());
     res
 }
 
@@ -43,7 +40,6 @@ impl SpellerCache {
         });
 
         {
-            //let suggestions = result.suggestions
             let suggestions = result.suggestions.clone();
             thread::spawn(move || loop {
                 match rx.recv() {
@@ -59,7 +55,10 @@ impl SpellerCache {
                         lock.insert(word.to_string(), result);
                         info!("Primed {}", word);
                     },
-                    _ => ()
+                    err => {
+                        info!("Prime loop ending: {:?}", err);
+                        return;
+                    }
                 }
             });
         }

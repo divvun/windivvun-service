@@ -189,7 +189,7 @@ impl DivvunSpellCheckProvider {
     loop {
       let res = unsafe { (*words).Next(elem_count, vec.as_mut_ptr(), &mut fetched) };
       if res == S_OK || res == S_FALSE {
-        for i in (0..fetched) {
+        for i in 0..fetched {
           let word = unsafe { util::u16_ptr_to_string(vec[i as usize]) };
           unsafe { CoTaskMemFree(vec[i as usize] as *mut c_void); }
           words_vec.push(word.into_string().unwrap());
@@ -225,16 +225,21 @@ impl DivvunSpellCheckProvider {
 }
 
 impl DivvunSpellCheckProvider {
-  pub fn new(language_tag: &str) -> *mut DivvunSpellCheckProvider {
-    //, archivePath: &str
-    let archive_path = SPELLER_REPOSITORY.get_speller_archive(language_tag);
-    // TODO
-    let archive_path_w = archive_path.unwrap().to_str().unwrap().to_owned();
+  pub fn new(language_tag: &str) -> Option<*mut DivvunSpellCheckProvider> {
+    let archive_path = SPELLER_REPOSITORY
+      .get_speller_archive(language_tag)?;
+    let archive_path = archive_path.to_str()?;
+    let archive_path = archive_path.to_string();
 
-    info!("Instanciating speller {} at {}", language_tag, archive_path_w);
+    info!("Instanciating speller {} at {}", language_tag, archive_path);
 
-    let archive = SpellerArchive::new(&archive_path_w).unwrap();
-    let speller = archive.speller();
+    let archive = SpellerArchive::new(&archive_path);
+    if let Err(err) = archive {
+      error!("failed to load speller archive: {:?}", err);
+      return None;
+    }
+    
+    let speller = archive.unwrap().speller();
     
     let s = Self {
         __vtable: Box::new(Self::create_vtable()),
@@ -247,6 +252,6 @@ impl DivvunSpellCheckProvider {
 
     let ptr = Box::into_raw(Box::new(s));
 
-    ptr as *mut _
+    Some(ptr as *mut _)
   }
 }

@@ -39,25 +39,21 @@ IMPL_UNKNOWN!(ISpellingError, DivvunSpellingError);
 #[implementation(ISpellingError)]
 impl DivvunSpellingError {
     fn get_StartIndex(&mut self, value: *mut u32) -> HRESULT {
-        info!("StartIndex {}", self.start_index);
         unsafe { *value = self.start_index; }
         S_OK
     }
 
     fn get_Length(&mut self, value: *mut u32) -> HRESULT {
-        info!("Length {}", self.length);
         unsafe { *value = self.length; }
         S_OK
     }
 
     fn get_CorrectiveAction(&mut self, value: *mut u32) -> HRESULT {
-        info!("CorrectiveAction {}", self.corrective_action);
         unsafe { *value = self.corrective_action; }
         S_OK
     }
 
     fn get_Replacement(&mut self, value: *mut LPCWSTR) -> HRESULT {
-        info!("Replacement {:?}", self.replacement);
         if self.corrective_action != CORRECTIVE_ACTION_REPLACE {
             unsafe { *value = std::ptr::null_mut(); }
         } else {
@@ -74,9 +70,7 @@ impl DivvunSpellingError {
         corrective_action: u32,
         replacement: Option<String>
     ) -> *mut DivvunSpellingError {
-        info!("create");
         let replacement = replacement.map_or(vec!(), |r| util::to_u16s(r).unwrap_or(vec!()));
-        info!("err repl {:?}", replacement);
 
         let s = Self {
             __vtable: Box::new(Self::create_vtable()),
@@ -170,13 +164,12 @@ impl DivvunEnumSpellingError {
                 (tokenizer_start + token.start()) as u32,
                 (token.end() - token.start()) as u32,
                 action.unwrap(),
-                replacement
+                replacement.to_owned()
             );
 
-            info!("error {} {}", (tokenizer_start + token.start()) as u32, (token.end() - token.start()) as u32);
+            info!("token {:?}, error action: {:?}, replacement {:?}", token, action, replacement);
 
             unsafe { *value = error as *mut _; }
-            info!("return");
             return S_OK;
         }
 

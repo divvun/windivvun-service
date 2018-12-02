@@ -68,13 +68,14 @@ impl DivvunSpellCheckProviderFactory {
 
         info!("create spell check provider {:?}", tag);
 
-        let provider = DivvunSpellCheckProvider::new(&tag);
-
-        unsafe {
-            *value = provider as *mut  _
+        if let Some(provider) = DivvunSpellCheckProvider::new(&tag) {
+            unsafe { *value = provider as *mut _; }
+            S_OK
+        } else {
+            info!("spell check provider creation failed");
+            // Spell check provider creation failed for some reason we can't communicate anyway
+            E_INVALIDARG
         }
-
-        S_OK
     }
 }
 
