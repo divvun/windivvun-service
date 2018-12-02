@@ -1,27 +1,21 @@
 #![cfg(windows)] 
 #![allow(non_snake_case)]
 
-use winapi::um::winnt::{LPCWSTR, HRESULT};
+use winapi::um::winnt::HRESULT;
 
 use winapi::shared::ntdef::ULONG;
-use winapi::shared::winerror::{S_OK, E_INVALIDARG, E_POINTER, E_NOINTERFACE, S_FALSE, E_UNEXPECTED};
-use winapi::shared::guiddef::{IsEqualGUID, GUID, REFIID};
-use winapi::ctypes::c_void;
-use winapi::shared::minwindef::{BOOL, TRUE};
-use winapi::Interface;
+use winapi::shared::winerror::{S_OK, S_FALSE, E_UNEXPECTED};
+use winapi::shared::guiddef::{IsEqualGUID, GUID};
 
 use winapi::um::unknwnbase::{IUnknown, IUnknownVtbl};
 use winapi::um::objidlbase::{IEnumString, IEnumStringVtbl};
-use winapi::um::combaseapi::CoTaskMemAlloc;
-use winapi::shared::wtypesbase::{LPOLESTR, OLECHAR};
+use winapi::shared::wtypesbase::LPOLESTR;
 
 use std::sync::atomic::{AtomicU32, Ordering};
 
 use com_impl::{ComInterface, interface, implementation};
 
-use std::slice::Iter;
 use std::vec::Vec;
-use std::mem;
 use ::util;
 
 #[interface(IEnumString)]
@@ -86,7 +80,7 @@ impl EnumString {
     fn Clone(&mut self, ppenum: *mut *mut IEnumString) -> HRESULT {
         info!("clone");
         unsafe {
-            let mut val = EnumString::new_with_offset(self.values.clone(), self.offset);
+            let val = EnumString::new_with_offset(self.values.clone(), self.offset);
             *ppenum = val as *mut _;
         }
         S_OK

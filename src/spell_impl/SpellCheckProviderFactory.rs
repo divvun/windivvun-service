@@ -7,18 +7,14 @@ use winapi::um::winnt::{LPCWSTR, HRESULT};
 use winapi::shared::ntdef::ULONG;
 use winapi::shared::winerror::{S_OK, E_INVALIDARG, E_POINTER};
 use winapi::shared::guiddef::{IsEqualGUID, GUID};
-use winapi::shared::minwindef::{TRUE, FALSE};
 use winapi::um::unknwnbase::{IUnknown, IUnknownVtbl};
 
 use std::sync::atomic::{AtomicU32, Ordering};
 
 
-use spellcheckprovider::{ISpellCheckProviderFactory, ISpellCheckProviderFactoryVtbl, ISpellCheckProvider, ISpellCheckProviderVtbl};
+use spellcheckprovider::{ISpellCheckProviderFactory, ISpellCheckProviderFactoryVtbl, ISpellCheckProvider};
 
 use com_impl::{ComInterface, interface, implementation};
-
-use std::ffi::OsString;
-use ::util::u16_ptr_to_string;
 
 use super::EnumString::EnumString;
 use super::SpellCheckProvider::DivvunSpellCheckProvider;

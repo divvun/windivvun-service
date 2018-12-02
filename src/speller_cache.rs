@@ -1,11 +1,10 @@
 use hfstospell::speller::{Speller, SpellerConfig};
-use hfstospell::archive::SpellerArchive;
 
 use std::collections::HashMap;
 use std::sync::Arc;
 use parking_lot::RwLock;
 use std::thread;
-use std::sync::mpsc::{Sender, Receiver, channel};
+use std::sync::mpsc::{Sender, channel};
 
 pub struct SpellerCache {
     speller: Arc<Speller>,
@@ -69,7 +68,9 @@ impl SpellerCache {
     pub fn prime(self: &Arc<Self>, word: &str) {
         info!("Attempting to prime {}", word);
         if !self.suggestions.read().contains_key(word) {
-            self.sender.send(word.to_string());
+            if self.sender.send(word.to_string()).is_err() {
+                error!("Failed to send prime word");
+            }
         }
     }
 

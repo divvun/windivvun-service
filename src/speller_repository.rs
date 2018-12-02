@@ -1,9 +1,5 @@
 use glob::{glob_with, MatchOptions};
-use std::collections::HashMap;
-use std::path::{Path, PathBuf};
-
-use std::sync::{Arc, RwLock};
-use hfstospell::archive::SpellerArchive;
+use std::path::PathBuf;
 
 use util;
 
@@ -20,7 +16,7 @@ impl SpellerRepository {
 
     pub fn get_speller_archives(&self) -> Vec<PathBuf> {
         self.base_directories.iter().flat_map(|base_directory| {
-            let mut path: PathBuf = [base_directory, "**/*.zhfst"].iter().collect();
+            let path: PathBuf = [base_directory, "**/*.zhfst"].iter().collect();
             info!("Enumerate dictionaries in {:?}", path.display());
             glob_with(path.to_str().unwrap(), &MatchOptions {
                 case_sensitive: false,

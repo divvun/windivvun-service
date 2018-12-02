@@ -1,10 +1,6 @@
 use std::collections::{HashSet, HashMap};
 use parking_lot::RwLock;
 use std::sync::Arc;
-use std::iter::FromIterator;
-
-#[derive(Hash)]
-struct AutoCorrection(String, String);
 
 pub struct Wordlists {
     ignore: RwLock<HashSet<String>>,

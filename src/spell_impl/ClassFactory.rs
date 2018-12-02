@@ -2,11 +2,10 @@
 #![allow(non_snake_case)]
 #![allow(unused_variables)]
 
-use winapi::um::objidlbase::IEnumString;
-use winapi::um::winnt::{LPCWSTR, HRESULT};
+use winapi::um::winnt::HRESULT;
 
 use winapi::shared::ntdef::ULONG;
-use winapi::shared::winerror::{S_OK, E_INVALIDARG, E_POINTER, E_NOINTERFACE};
+use winapi::shared::winerror::{S_OK, E_NOINTERFACE};
 use winapi::shared::guiddef::{IsEqualGUID, GUID, REFIID};
 use winapi::ctypes::c_void;
 use winapi::shared::minwindef::{BOOL, TRUE};

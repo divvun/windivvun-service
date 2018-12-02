@@ -1,5 +1,3 @@
-use ::util;
-
 macro_rules! IMPL_UNKNOWN {
   ($x:ty, $y:ty) => {
     #[implementation(IUnknown)]

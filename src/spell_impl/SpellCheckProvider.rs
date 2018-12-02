@@ -7,7 +7,7 @@ use winapi::shared::ntdef::ULONG;
 use winapi::shared::winerror::{S_OK, E_INVALIDARG, E_POINTER, S_FALSE};
 use winapi::shared::guiddef::{IsEqualGUID, GUID};
 use winapi::ctypes::c_void;
-use winapi::shared::wtypesbase::{LPOLESTR, OLECHAR};
+use winapi::shared::wtypesbase::LPOLESTR;
 use winapi::um::combaseapi::CoTaskMemFree;
 
 use winapi::um::unknwnbase::{IUnknown, IUnknownVtbl};
@@ -19,7 +19,7 @@ use spellcheckprovider::{ISpellCheckProvider, ISpellCheckProviderVtbl, IEnumSpel
 
 use com_impl::{ComInterface, interface, implementation};
 
-use hfstospell::speller::{Speller, SpellerConfig};
+use hfstospell::speller::Speller;
 use hfstospell::archive::SpellerArchive;
 
 use std::collections::HashMap;
@@ -208,7 +208,7 @@ impl DivvunSpellCheckProvider {
         let mut map: HashMap<String, String> = HashMap::new();
         for word in words_vec {
           let tokens = word.split("\t").collect::<Vec<&str>>();
-          if (tokens.len() == 2) {
+          if tokens.len() == 2 {
             map.insert(tokens[0].to_string(), tokens[1].to_string());
           } else {
             error!("Invalid auto correct pair: {:?}", tokens);

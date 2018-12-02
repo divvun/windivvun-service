@@ -7,7 +7,7 @@ use winapi::ctypes::c_int;
 use winapi::um::combaseapi::CoTaskMemAlloc;
 use winapi::um::winbase;
 use std::mem;
-use winapi::shared::wtypesbase::{LPOLESTR, OLECHAR};
+use winapi::shared::wtypesbase::OLECHAR;
 
 const LOCALE_NAME_MAX_LENGTH: usize = 85;
 

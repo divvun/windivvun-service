@@ -29,17 +29,15 @@ mod spellcheckprovider;
 mod spell_impl;
 
 use winapi::um::winnt::PVOID;
-use winapi::um::winuser::MessageBoxW;
 use winapi::um::winnt::{DLL_PROCESS_ATTACH, DLL_PROCESS_DETACH};
 use winapi::shared::ntdef::HRESULT;
-use winapi::shared::guiddef::{REFCLSID, REFIID, IsEqualGUID, GUID};
+use winapi::shared::guiddef::{REFCLSID, REFIID, IsEqualGUID};
 use winapi::shared::winerror::{S_OK, CLASS_E_CLASSNOTAVAILABLE, S_FALSE};
 use winapi::Interface;
 
 use std::path::PathBuf;
 
-use spellcheckprovider::{ISpellCheckProviderFactory};
-use winapi::um::unknwnbase::{IClassFactory};
+use winapi::um::unknwnbase::IClassFactory;
 use spell_impl::ClassFactory::DivvunSpellCheckProviderFactoryClassFactory;
 
 mod speller_repository;
@@ -47,8 +45,6 @@ mod speller_cache;
 mod wordlists;
 
 use speller_repository::SpellerRepository;
-
-use std::panic;
 
 lazy_static! {
     pub static ref SPELLER_REPOSITORY: SpellerRepository = {

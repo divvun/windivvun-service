@@ -1,26 +1,22 @@
 #![cfg(windows)] 
 #![allow(non_snake_case)]
 
-use winapi::um::objidlbase::IEnumString;
 use winapi::um::winnt::{LPCWSTR, HRESULT};
 use winapi::shared::ntdef::ULONG;
-use winapi::shared::winerror::{S_OK, E_INVALIDARG, E_POINTER, S_FALSE};
+use winapi::shared::winerror::{S_OK, S_FALSE};
 use winapi::shared::guiddef::{IsEqualGUID, GUID};
 
 use winapi::um::unknwnbase::{IUnknown, IUnknownVtbl};
 
 use std::sync::atomic::{AtomicU32, Ordering};
 
-
 use spellcheckprovider::{IEnumSpellingError, IEnumSpellingErrorVtbl, ISpellingError, ISpellingErrorVtbl, CORRECTIVE_ACTION_REPLACE, CORRECTIVE_ACTION_GET_SUGGESTIONS};
 
 use com_impl::{ComInterface, interface, implementation};
 
-use hfstospell::speller::{SpellerConfig, Speller};
 use hfstospell::tokenizer::{Tokenize, Token};
 
 use std::sync::Arc;
-use std::ffi::OsString;
 use ::util;
 use ::speller_cache::SpellerCache;
 use ::wordlists::Wordlists;
