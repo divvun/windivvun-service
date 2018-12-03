@@ -53,8 +53,8 @@ lazy_static! {
         {
             if let Ok(mut path) = std::env::var("APPDATA").map(|p| PathBuf::from(p)) {
                 path.push("Divvun");
-                path.push("Spell Checker");
-                path.push("dicts");
+                path.push("Spellers");
+                path.push("dictionaries");
                 if let Some(path) = path.to_str() {
                     dictionaries.push(path.to_string());
                 }
@@ -67,7 +67,7 @@ lazy_static! {
                 .parent()
                 .unwrap()
                 .to_path_buf();
-            path.push("dicts");
+            path.push("dictionaries");
             if let Some(path) = path.to_str() {
                 dictionaries.push(path.to_string());
             }
