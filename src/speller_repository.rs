@@ -1,10 +1,41 @@
-use glob::{glob_with, MatchOptions};
-use std::path::PathBuf;
+use std::{io, fs};
+use std::path::{Path, PathBuf};
 
 use util;
 
 pub struct SpellerRepository {
     base_directories: Vec<String>,
+}
+
+fn find_zhfsts(dir: &Path) -> Vec<PathBuf> {
+    let mut results: Vec<PathBuf> = vec!();
+
+    fn visit_dirs(dir: &Path, results: &mut Vec<PathBuf>) -> io::Result<()> {
+        if dir.is_dir() {
+            for entry in fs::read_dir(dir)? {
+                let entry = entry?;
+                let path = entry.path();
+                if path.is_dir() {
+                    visit_dirs(&path, results)?;
+                } else {
+                    if let Some(ext) = path.extension() {
+                        if ext == "zhfst" {
+                           results.push(path.to_owned());
+                        }
+                    }
+                }
+            }
+        }
+        Ok(())
+    }
+
+    
+    let err = visit_dirs(dir, &mut results);
+    if let Err(e) = err {
+        error!("Error listing {:?}: {:?}", dir, e);
+    }
+
+    results
 }
 
 impl SpellerRepository {
@@ -16,18 +47,21 @@ impl SpellerRepository {
         self.base_directories
             .iter()
             .flat_map(|base_directory| {
-                let path: PathBuf = [base_directory, "**/*.zhfst"].iter().collect();
-                info!("Enumerate dictionaries in {:?}", path.display());
-                glob_with(
-                    path.to_str().unwrap(),
-                    &MatchOptions {
-                        case_sensitive: false,
-                        require_literal_leading_dot: false,
-                        require_literal_separator: false,
-                    },
-                )
-                .map(|paths| paths.filter_map(|i| i.ok()))
-                .unwrap()
+                // let path: PathBuf = [base_directory, "**/*.zhfst"].iter().collect();
+                info!("Enumerate dictionaries in {:?}", base_directory);
+
+                // glob_with(
+                //     path.to_str().unwrap(),
+                //     &MatchOptions {
+                //         case_sensitive: false,
+                //         require_literal_leading_dot: false,
+                //         require_literal_separator: false,
+                //     },
+                // )
+                // .map(|paths|
+                //     paths.inspect(|p| info!("path: {:?}", p)).filter_map(|i| i.ok()))
+                // .unwrap()
+                find_zhfsts(&Path::new(base_directory))
             })
             .collect()
     }
@@ -58,12 +92,4 @@ impl SpellerRepository {
 
         None
     }
-
-    // pub fn get_speller(&mut self, language_tag: &str) -> Option<Arc<SpellerArchive<'data>>> {
-    //     let path = self.dictionaries.get(language_tag)?;
-
-    //     Some(self.speller_cache.entry(path.to_string()).or_insert_with(|| {
-    //         Arc::new(SpellerArchive::new(path).unwrap())
-    //     }).clone())
-    // }
 }

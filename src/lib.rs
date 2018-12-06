@@ -6,7 +6,6 @@
 #[macro_use]
 extern crate winapi;
 extern crate com_impl;
-extern crate glob;
 extern crate hfstospell;
 
 extern crate parking_lot;
@@ -35,7 +34,7 @@ use winapi::um::winnt::PVOID;
 use winapi::um::winnt::{DLL_PROCESS_ATTACH, DLL_PROCESS_DETACH};
 use winapi::Interface;
 
-use std::path::PathBuf;
+use std::path::{PathBuf, Path};
 
 use spell_impl::ClassFactory::DivvunSpellCheckProviderFactoryClassFactory;
 use winapi::um::unknwnbase::IClassFactory;
@@ -51,7 +50,9 @@ lazy_static! {
         let mut dictionaries: Vec<String> = vec!();
         // APPDATA dictionaries
         {
-            if let Ok(mut path) = std::env::var("APPDATA").map(|p| PathBuf::from(p)) {
+            if let Some(mut path) = std::env::var("APPDATA").ok().and_then(|p| Path::new(&p).parent().map(|p| p.to_path_buf())) {
+                path.push("Local");
+                path.push("Programs");
                 path.push("Divvun");
                 path.push("Spellers");
                 path.push("dictionaries");
