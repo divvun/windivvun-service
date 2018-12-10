@@ -55,7 +55,6 @@ lazy_static! {
                 path.push("Programs");
                 path.push("Divvun");
                 path.push("Spellers");
-                path.push("dictionaries");
                 if let Some(path) = path.to_str() {
                     dictionaries.push(path.to_string());
                 }
@@ -68,7 +67,6 @@ lazy_static! {
                 .parent()
                 .unwrap()
                 .to_path_buf();
-            path.push("dictionaries");
             if let Some(path) = path.to_str() {
                 dictionaries.push(path.to_string());
             }
