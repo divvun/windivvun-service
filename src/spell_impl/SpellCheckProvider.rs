@@ -171,7 +171,7 @@ impl DivvunSpellCheckProvider {
         info!("get_Id");
         // divvun or so
         unsafe {
-            *value = util::alloc_com_str("divvun").unwrap();
+            *value = util::alloc_com_str("windivvun").unwrap();
         }
         S_OK
     }
@@ -180,7 +180,7 @@ impl DivvunSpellCheckProvider {
         info!("get_LocalizedName");
         // Divvun Spell Thing
         unsafe {
-            *value = util::alloc_com_str("Divvun Spell Checker").unwrap();
+            *value = util::alloc_com_str("WinDivvun").unwrap();
         }
         S_OK
     }

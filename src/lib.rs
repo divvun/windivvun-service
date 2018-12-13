@@ -53,7 +53,7 @@ lazy_static! {
             if let Some(mut path) = std::env::var("APPDATA").ok().and_then(|p| Path::new(&p).parent().map(|p| p.to_path_buf())) {
                 path.push("Local");
                 path.push("Programs");
-                path.push("Divvun");
+                path.push("WinDivvun");
                 path.push("Spellers");
                 if let Some(path) = path.to_str() {
                     dictionaries.push(path.to_string());
@@ -116,11 +116,6 @@ extern "stdcall" fn DllMain(module: u32, reason_for_call: u32, reserved: PVOID) 
             info!("Library loaded! procid = {}", std::process::id());
             info!("{:?}", std::env::current_dir());
             info!("{:?}", std::env::current_exe());
-            // // info!("{:?}", known_folder(&knownfolders::FOLDERID_RoamingAppData));
-            // // info!("prj {:?}", directories::ProjectDirs::from("com", "Divvun", "System Spell Checker"));
-            // for (key, value) in std::env::vars() {
-            //     info!("{}: {}", key, value);
-            // }
         }
         DLL_PROCESS_DETACH => {
             info!("Library unloaded :(");
