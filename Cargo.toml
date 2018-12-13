@@ -1,10 +1,10 @@
 [package]
-name = "win-spellcheck"
+name = "windivvun"
 version = "0.1.0"
 authors = ["Eike Siewertsen <eike@technocreatives.com>"]
 
 [lib]
-name = "winspellcheck"
+name = "windivvun"
 crate-type = ["dylib"]
 
 [dependencies]
