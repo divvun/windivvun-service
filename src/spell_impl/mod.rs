@@ -42,7 +42,7 @@ macro_rules! com_wstr_ptr {
             return E_POINTER;
         }
 
-        let s = unsafe { ::util::u16_ptr_to_string($x) }.into_string();
+        let s = unsafe { crate::util::u16_ptr_to_string($x) }.into_string();
         if s.is_err() {
             return E_INVALIDARG;
         }

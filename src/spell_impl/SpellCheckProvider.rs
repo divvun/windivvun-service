@@ -15,7 +15,7 @@ use winapi::um::unknwnbase::{IUnknown, IUnknownVtbl};
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Arc;
 
-use spellcheckprovider::{IEnumSpellingError, ISpellCheckProvider, ISpellCheckProviderVtbl};
+use crate::spellcheckprovider::{IEnumSpellingError, ISpellCheckProvider, ISpellCheckProviderVtbl};
 
 use com_impl::{implementation, interface, ComInterface};
 
@@ -24,10 +24,10 @@ use hfstospell::speller::Speller;
 
 use std::collections::HashMap;
 
-use speller_cache::SpellerCache;
-use util;
-use wordlists::Wordlists;
-use SPELLER_REPOSITORY;
+use crate::speller_cache::SpellerCache;
+use crate::util;
+use crate::wordlists::Wordlists;
+use crate::SPELLER_REPOSITORY;
 
 use super::EnumSpellingError::DivvunEnumSpellingError;
 use super::EnumString::EnumString;

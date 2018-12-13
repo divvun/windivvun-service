@@ -19,7 +19,7 @@ extern crate log4rs;
 extern crate lazy_static;
 
 mod util;
-use util::fmt_guid;
+use crate::util::fmt_guid;
 
 use log4rs::append::file::FileAppender;
 use log4rs::config::{Appender, Config, Root};
@@ -36,14 +36,14 @@ use winapi::Interface;
 
 use std::path::{PathBuf, Path};
 
-use spell_impl::ClassFactory::DivvunSpellCheckProviderFactoryClassFactory;
+use crate::spell_impl::ClassFactory::DivvunSpellCheckProviderFactoryClassFactory;
 use winapi::um::unknwnbase::IClassFactory;
 
 mod speller_cache;
 mod speller_repository;
 mod wordlists;
 
-use speller_repository::SpellerRepository;
+use crate::speller_repository::SpellerRepository;
 
 lazy_static! {
     pub static ref SPELLER_REPOSITORY: SpellerRepository = {
@@ -63,7 +63,7 @@ lazy_static! {
 
         // Program Files dictionaries
         {
-            let mut path = PathBuf::from(util::get_module_path().unwrap())
+            let path = PathBuf::from(util::get_module_path().unwrap())
                 .parent()
                 .unwrap()
                 .to_path_buf();

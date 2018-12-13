@@ -1,7 +1,7 @@
 use std::{io, fs};
 use std::path::{Path, PathBuf};
 
-use util;
+use crate::util;
 
 pub struct SpellerRepository {
     base_directories: Vec<String>,

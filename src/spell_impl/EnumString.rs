@@ -16,7 +16,7 @@ use std::sync::atomic::{AtomicU32, Ordering};
 use com_impl::{implementation, interface, ComInterface};
 
 use std::vec::Vec;
-use util;
+use crate::util;
 
 #[interface(IEnumString)]
 pub struct EnumString {

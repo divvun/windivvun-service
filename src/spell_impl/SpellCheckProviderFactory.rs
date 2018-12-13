@@ -11,7 +11,7 @@ use winapi::um::winnt::{HRESULT, LPCWSTR};
 
 use std::sync::atomic::{AtomicU32, Ordering};
 
-use spellcheckprovider::{
+use crate::spellcheckprovider::{
     ISpellCheckProvider, ISpellCheckProviderFactory, ISpellCheckProviderFactoryVtbl,
 };
 
@@ -20,7 +20,7 @@ use com_impl::{implementation, interface, ComInterface};
 use super::EnumString::EnumString;
 use super::SpellCheckProvider::DivvunSpellCheckProvider;
 
-use SPELLER_REPOSITORY;
+use crate::SPELLER_REPOSITORY;
 
 #[interface(ISpellCheckProviderFactory)]
 pub struct DivvunSpellCheckProviderFactory {

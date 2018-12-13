@@ -10,7 +10,7 @@ use winapi::um::unknwnbase::{IUnknown, IUnknownVtbl};
 
 use std::sync::atomic::{AtomicU32, Ordering};
 
-use spellcheckprovider::{
+use crate::spellcheckprovider::{
     IEnumSpellingError, IEnumSpellingErrorVtbl, ISpellingError, ISpellingErrorVtbl,
     CORRECTIVE_ACTION_GET_SUGGESTIONS, CORRECTIVE_ACTION_REPLACE,
 };
@@ -19,10 +19,10 @@ use com_impl::{implementation, interface, ComInterface};
 
 use hfstospell::tokenizer::{Token, Tokenize};
 
-use speller_cache::SpellerCache;
+use crate::speller_cache::SpellerCache;
 use std::sync::Arc;
-use util;
-use wordlists::Wordlists;
+use crate::util;
+use crate::wordlists::Wordlists;
 
 #[interface(ISpellingError)]
 pub struct DivvunSpellingError {

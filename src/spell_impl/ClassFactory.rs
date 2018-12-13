@@ -11,14 +11,14 @@ use winapi::shared::ntdef::ULONG;
 use winapi::shared::winerror::{E_NOINTERFACE, S_OK};
 use winapi::Interface;
 
-use spellcheckprovider::ISpellCheckProviderFactory;
+use crate::spellcheckprovider::ISpellCheckProviderFactory;
 use winapi::um::unknwnbase::{IClassFactory, IClassFactoryVtbl, IUnknown, IUnknownVtbl};
 
 use std::sync::atomic::{AtomicU32, Ordering};
 
 use com_impl::{implementation, interface, ComInterface};
 
-use util::fmt_guid;
+use crate::util::fmt_guid;
 
 use super::SpellCheckProviderFactory::DivvunSpellCheckProviderFactory;
 
