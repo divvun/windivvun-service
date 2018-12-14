@@ -99,6 +99,14 @@ impl DivvunSpellingError {
     }
 }
 
+fn byte_off_to_idx(text: &str, byte_offset: usize) -> usize {
+    text.char_indices()
+        .enumerate()
+        .find(|(i, (n, _))| *n == byte_offset)
+        .map(|(i, _)| i)
+        .unwrap_or(text.len())
+}
+
 #[interface(IEnumSpellingError)]
 pub struct DivvunEnumSpellingError {
     refs: AtomicU32,
@@ -166,17 +174,21 @@ impl DivvunEnumSpellingError {
                 continue;
             }
 
-            self.speller_cache.prime(token.value());
-            let error = DivvunSpellingError::new(
-                (tokenizer_start + token.start()) as u32,
-                (token.end() - token.start()) as u32,
-                action.unwrap(),
-                replacement.to_owned(),
-            );
-
             info!(
                 "token {:?}, error action: {:?}, replacement {:?}",
                 token, action, replacement
+            );
+
+            self.speller_cache.prime(token.value());
+
+            let start = byte_off_to_idx(&self.text, tokenizer_start + token.start());
+            let length = byte_off_to_idx(&self.text, token.end()) - byte_off_to_idx(&self.text, token.start());
+
+            let error = DivvunSpellingError::new(
+                start as u32,
+                length as u32,
+                action.unwrap(),
+                replacement.to_owned(),
             );
 
             unsafe {
