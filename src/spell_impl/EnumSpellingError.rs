@@ -38,6 +38,7 @@ IMPL_UNKNOWN!(ISpellingError, DivvunSpellingError);
 #[implementation(ISpellingError)]
 impl DivvunSpellingError {
     fn get_StartIndex(&mut self, value: *mut u32) -> HRESULT {
+        // info!("StartIndex, {:?}", self.start_index);
         unsafe {
             *value = self.start_index;
         }
@@ -45,6 +46,7 @@ impl DivvunSpellingError {
     }
 
     fn get_Length(&mut self, value: *mut u32) -> HRESULT {
+        // info!("Length, {:?}", self.length);
         unsafe {
             *value = self.length;
         }
@@ -52,6 +54,7 @@ impl DivvunSpellingError {
     }
 
     fn get_CorrectiveAction(&mut self, value: *mut u32) -> HRESULT {
+        // info!("CorrectiveAction, {:?}", self.corrective_action);
         unsafe {
             *value = self.corrective_action;
         }
@@ -60,10 +63,12 @@ impl DivvunSpellingError {
 
     fn get_Replacement(&mut self, value: *mut LPCWSTR) -> HRESULT {
         if self.corrective_action != CORRECTIVE_ACTION_REPLACE {
+            // info!("Replacement, null");
             unsafe {
                 *value = std::ptr::null_mut();
             }
         } else {
+            // info!("Replacement, something");
             unsafe {
                 *value = self.replacement.as_ptr();
             }

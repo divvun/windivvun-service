@@ -1,7 +1,36 @@
 use std::{io, fs};
 use std::path::{Path, PathBuf};
+use std::collections::HashMap;
 
 use crate::util;
+
+lazy_static! {
+    pub static ref HARDCODED_TAG_TABLE: HashMap<String, Vec<String>> = {
+        let mut map = HashMap::new();
+        for tag in &["se", "sma", "smn", "sms", "smj"] {
+            let mut tags = vec![];
+            for region in &["NO", "SV", "FI"] {
+                tags.push(format!("{}-Latn-{}", tag, region));
+            }
+            map.insert(tag.to_string(), tags);
+        }
+        map
+    };
+}
+
+fn resolve_local_name(neutral_tag: &str) -> Vec<String> {
+    let mut tags: Vec<String> = vec![];
+
+    if let Some(tag) = util::resolve_locale_name(&neutral_tag) {
+        tags.push(tag);
+    }
+
+    if let Some(extra_tags) = HARDCODED_TAG_TABLE.get(neutral_tag) {
+        extra_tags.iter().for_each(|tag| tags.push(tag.to_owned()));
+    }
+
+    tags
+}
 
 pub struct SpellerRepository {
     base_directories: Vec<String>,
@@ -72,8 +101,9 @@ impl SpellerRepository {
             .iter()
             .filter_map(|path| {
                 path.file_stem()
-                    .and_then(|path| util::resolve_locale_name(&path.to_string_lossy()))
+                    .map(|path| resolve_local_name(&path.to_string_lossy()))
             })
+            .flatten()
             .collect()
     }
 
@@ -82,10 +112,12 @@ impl SpellerRepository {
         for path in self.get_speller_archives() {
             let tag_name = path
                 .file_stem()
-                .and_then(|path| util::resolve_locale_name(&path.to_string_lossy()));
-            if let Some(tag_name) = tag_name {
-                if tag_name == language_tag {
-                    return Some(path);
+                .map(|path| resolve_local_name(&path.to_string_lossy()));
+            if let Some(tags) = tag_name {
+                for tag in tags {
+                    if tag == language_tag {
+                        return Some(path);
+                    }
                 }
             }
         }
