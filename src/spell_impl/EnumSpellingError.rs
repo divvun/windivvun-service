@@ -17,7 +17,7 @@ use crate::spellcheckprovider::{
 
 use com_impl::{implementation, interface, ComInterface};
 
-use hfstospell::tokenizer::{Token, Tokenize};
+use divvunspell::tokenizer::{Token, Tokenize};
 
 use crate::speller_cache::SpellerCache;
 use std::sync::Arc;

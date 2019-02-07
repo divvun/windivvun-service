@@ -1,4 +1,5 @@
-use hfstospell::speller::{Speller, SpellerConfig};
+use divvunspell::speller::{Speller, SpellerConfig};
+use divvunspell::transducer::HfstTransducer;
 
 use parking_lot::RwLock;
 use std::collections::HashMap;
@@ -7,18 +8,19 @@ use std::sync::Arc;
 use std::thread;
 
 pub struct SpellerCache {
-    speller: Arc<Speller>,
+    speller: Arc<Speller<HfstTransducer>>,
     //speller_config: SpellerConfig,
     is_correct: RwLock<HashMap<String, bool>>,
     suggestions: Arc<RwLock<HashMap<String, Vec<String>>>>,
     sender: Sender<String>,
 }
 
-fn suggest_internal(speller: &Arc<Speller>, word: &str) -> Vec<String> {
+fn suggest_internal(speller: &Arc<Speller<HfstTransducer>>, word: &str) -> Vec<String> {
     let speller_config = SpellerConfig {
         n_best: Some(5),
         max_weight: Some(50.0),
         beam: None,
+        with_caps: true
     };
 
     let res: Vec<String> = speller
@@ -31,7 +33,7 @@ fn suggest_internal(speller: &Arc<Speller>, word: &str) -> Vec<String> {
 }
 
 impl SpellerCache {
-    pub fn new(speller: Arc<Speller>) -> Arc<Self> {
+    pub fn new(speller: Arc<Speller<HfstTransducer>>) -> Arc<Self> {
         let (tx, rx) = channel();
 
         let result = Arc::new(Self {
@@ -124,7 +126,7 @@ mod tests {
 
     #[test]
     fn test() {
-        use hfstospell::archive::SpellerArchive;
+        use divvunspell::archive::SpellerArchive;
         let archive =
             SpellerArchive::new(r"C:\Program Files\SpellCheckTest\dicts\se.zhfst").unwrap();
         let speller = archive.speller();

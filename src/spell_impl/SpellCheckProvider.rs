@@ -19,8 +19,9 @@ use crate::spellcheckprovider::{IEnumSpellingError, ISpellCheckProvider, ISpellC
 
 use com_impl::{implementation, interface, ComInterface};
 
-use hfstospell::archive::SpellerArchive;
-use hfstospell::speller::Speller;
+use divvunspell::archive::SpellerArchive;
+use divvunspell::speller::Speller;
+use divvunspell::transducer::HfstTransducer;
 
 use std::collections::HashMap;
 
@@ -43,7 +44,7 @@ ENUM! {enum WORDLIST_TYPE {
 pub struct DivvunSpellCheckProvider {
     refs: AtomicU32,
     language_tag: String,
-    speller: Arc<Speller>,
+    speller: Arc<Speller<HfstTransducer>>,
     speller_cache: Arc<SpellerCache>,
     wordlists: Arc<Wordlists>,
 }

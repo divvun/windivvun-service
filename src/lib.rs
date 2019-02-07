@@ -6,7 +6,7 @@
 #[macro_use]
 extern crate winapi;
 extern crate com_impl;
-extern crate hfstospell;
+extern crate divvunspell;
 
 extern crate parking_lot;
 

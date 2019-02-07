@@ -24,8 +24,8 @@ git = "https://github.com/bbqsrc/com-impl-rs"
 version = "0.3.6"
 features = ["winerror", "unknwnbase", "objbase", "oleauto", "winerror", "shlobj", "shtypes", "combaseapi", "knownfolders", "winuser", "winnls"]
 
-[dependencies.hfst-ospell-rs]
-git = "https://github.com/bbqsrc/hfst-ospell-rs"
+[dependencies.divvunspell]
+git = "https://github.com/divvun/divvunspell"
 
 [build-dependencies.winapi-tlb-bindgen]
 git = "https://github.com/Arnavion/winapi-tlb-bindgen"
