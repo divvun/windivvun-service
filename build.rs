@@ -10,7 +10,17 @@ fn main() {
         let dir_iter =
             std::fs::read_dir(r"C:\Program Files (x86)\Windows Kits\10\Include\")
             .expect("Windows Kits\\10\\Include\\ must exist");
-        let mut idl_file_path = dir_iter.last().unwrap().unwrap().path();
+        let mut idl_file_path = dir_iter
+            .filter(|dir| {
+                match dir {
+                    Ok(ref entry) => {
+                        entry.path().to_str().unwrap().starts_with(r"C:\Program Files (x86)\Windows Kits\10\Include\10.")
+                    }
+                    _ => false
+                }
+            })
+            .last()
+            .unwrap().unwrap().path();
         idl_file_path.push(r"um\spellcheckprovider.idl");
         let mut idl_file = std::fs::File::open(idl_file_path).expect("spellcheckprovider.idl must exist");
         //let mut idl_file = std::fs::File::open(r"C:\Program Files (x86)\Windows Kits\10\Include\10.0.10586.0\um\spellcheckprovider.idl").unwrap();
