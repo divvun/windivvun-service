@@ -120,21 +120,21 @@ impl SpellerCache {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
 
-    #[test]
-    fn test() {
-        use divvunspell::archive::SpellerArchive;
-        let archive =
-            SpellerArchive::new(r"C:\Program Files\SpellCheckTest\dicts\se.zhfst").unwrap();
-        let speller = archive.speller();
+//     #[test]
+//     fn test() {
+//         use divvunspell::archive::SpellerArchive;
+//         let archive =
+//             SpellerArchive::new(r"C:\Program Files\SpellCheckTest\dicts\se.zhfst").unwrap();
+//         let speller = archive.speller();
 
-        let cache = SpellerCache::new(speller);
-        println!("cache A {:?}", cache.to_owned().is_correct("hello"));
-        println!("cache A2 {:?}", cache.to_owned().is_correct("hello"));
-        println!("cache B {:?}", cache.to_owned().suggest("hello"));
-        println!("cache B2 {:?}", cache.to_owned().suggest("hello"));
-    }
-}
+//         let cache = SpellerCache::new(speller);
+//         println!("cache A {:?}", cache.to_owned().is_correct("hello"));
+//         println!("cache A2 {:?}", cache.to_owned().is_correct("hello"));
+//         println!("cache B {:?}", cache.to_owned().suggest("hello"));
+//         println!("cache B2 {:?}", cache.to_owned().suggest("hello"));
+//     }
+// }
