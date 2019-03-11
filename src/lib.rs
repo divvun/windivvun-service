@@ -1,5 +1,4 @@
 #![feature(integer_atomics)]
-#![feature(duration_as_u128)]
 #![feature(arbitrary_self_types)]
 #![allow(unused_variables)]
 
@@ -12,6 +11,7 @@ extern crate parking_lot;
 
 #[macro_use]
 extern crate log;
+extern crate env_logger;
 extern crate directories;
 extern crate log4rs;
 
@@ -42,6 +42,9 @@ use winapi::um::unknwnbase::IClassFactory;
 mod speller_cache;
 mod speller_repository;
 mod wordlists;
+
+use dotenv::dotenv;
+use dotenv_codegen::{dotenv, expand_dotenv};
 
 use crate::speller_repository::SpellerRepository;
 
@@ -111,7 +114,23 @@ extern "stdcall" fn DllCanUnloadNow() -> HRESULT {
 extern "stdcall" fn DllMain(module: u32, reason_for_call: u32, reserved: PVOID) -> bool {
     match reason_for_call {
         DLL_PROCESS_ATTACH => {
-            initialize_logging();
+            // Initialize Sentry
+            dotenv().ok();
+            let sentry_dsn = dotenv!("SENTRY_DSN");
+            let _guard = sentry::init(sentry_dsn);
+            std::env::set_var("RUST_BACKTRACE", "1");
+            sentry::integrations::panic::register_panic_handler();
+            
+            if initialize_logging() == None {
+                // Set up logging to Sentry if file logging fails, this is the expected behavior in production
+                let mut log_builder = env_logger::builder();
+                log_builder.parse_filters("info");
+                sentry::integrations::env_logger::init(Some(log_builder.build()), Default::default());
+                info!("Initialized Sentry logging");
+            }
+
+            // Alternatively, could put it in a Box and drop in DLL_PROCESS_DETACH
+            std::mem::forget(_guard);
 
             info!("Library loaded! procid = {}", std::process::id());
             info!("{:?}", std::env::current_dir());
