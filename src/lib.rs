@@ -1,5 +1,4 @@
 #![feature(integer_atomics)]
-#![feature(duration_as_u128)]
 #![feature(arbitrary_self_types)]
 #![allow(unused_variables)]
 

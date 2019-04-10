@@ -17,7 +17,7 @@ use crate::spellcheckprovider::{
 
 use com_impl::{implementation, interface, ComInterface};
 
-use divvunspell::tokenizer::{Token, Tokenize};
+use divvunspell::tokenizer::Tokenize;
 
 use crate::speller_cache::SpellerCache;
 use std::sync::Arc;
@@ -109,7 +109,7 @@ fn byte_off_to_idx(text: &str, byte_offset: usize) -> usize {
         .enumerate()
         .find(|(i, (n, _))| *n == byte_offset)
         .map(|(i, _)| i)
-        .unwrap_or(text.len())
+        .unwrap_or(text.chars().count())
 }
 
 #[interface(IEnumSpellingError)]
@@ -129,18 +129,16 @@ impl DivvunEnumSpellingError {
         info!("Next");
 
         let tokenizer_start = self.text_offset;
-        let tokenizer = self.text[tokenizer_start..].tokenize();
-        let tokens = tokenizer.filter_map(|t| match t {
-            Token::Word(_, _, _) => Some(t),
-            _ => None,
-        });
 
-        for token in tokens {
-            info!("Token {:?}", token);
-            self.text_offset = tokenizer_start + token.end();
+        let tokens = self.text[tokenizer_start..].word_bound_indices()
+            .filter(|(i, s)| s.chars().any(|ch| ch.is_alphanumeric()));
+
+        for (start, word) in tokens {
+            info!("Token {}: {:?}", start, word);
+            self.text_offset = tokenizer_start + start + word.len();
 
             // Check ignore wordlist
-            if self.wordlists.contains_ignore(token.value()) {
+            if self.wordlists.contains_ignore(word) {
                 info!("Wordlist ignore");
                 continue;
             }
@@ -149,7 +147,7 @@ impl DivvunEnumSpellingError {
             let mut replacement: Option<String> = None;
 
             // Check auto correct wordlist
-            if let Some(r) = self.wordlists.get_replacement(token.value()) {
+            if let Some(r) = self.wordlists.get_replacement(word) {
                 info!("wordlist replace {}", r);
 
                 action = Some(CORRECTIVE_ACTION_REPLACE);
@@ -157,19 +155,19 @@ impl DivvunEnumSpellingError {
             }
 
             // Check exclude wordlist
-            if action.is_none() && self.wordlists.contains_exclude(token.value()) {
+            if action.is_none() && self.wordlists.contains_exclude(word) {
                 info!("wordlist incorrect");
                 action = Some(CORRECTIVE_ACTION_GET_SUGGESTIONS);
                 replacement = None;
             }
 
             // Check add wordlist
-            if self.wordlists.contains_add(token.value()) {
+            if self.wordlists.contains_add(word) {
                 info!("wordlist added");
                 action = None;
             } else {
                 // Query speller API
-                if action.is_none() && !self.speller_cache.to_owned().is_correct(token.value()) {
+                if action.is_none() && !self.speller_cache.to_owned().is_correct(word) {
                     action = Some(CORRECTIVE_ACTION_GET_SUGGESTIONS);
                     replacement = None;
                 }
@@ -180,14 +178,18 @@ impl DivvunEnumSpellingError {
             }
 
             info!(
-                "token {:?}, error action: {:?}, replacement {:?}",
-                token, action, replacement
+                "word {:?}, error action: {:?}, replacement {:?}",
+                word, action, replacement
             );
 
-            self.speller_cache.prime(token.value());
+            self.speller_cache.prime(word);
 
-            let start = byte_off_to_idx(&self.text, tokenizer_start + token.start());
-            let length = byte_off_to_idx(&self.text, token.end()) - byte_off_to_idx(&self.text, token.start());
+            info!("Rstart {}, Rlength {}", start, word.len());
+
+            let start = byte_off_to_idx(&self.text, tokenizer_start + start);
+            let length = byte_off_to_idx(&self.text, start + word.len()) - byte_off_to_idx(&self.text, start);
+
+            info!("start {}, length {}", start, length);
 
             let error = DivvunSpellingError::new(
                 start as u32,

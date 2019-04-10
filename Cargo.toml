@@ -26,6 +26,7 @@ features = ["winerror", "unknwnbase", "objbase", "oleauto", "winerror", "shlobj"
 
 [dependencies.divvunspell]
 git = "https://github.com/divvun/divvunspell"
+branch = "develop"
 
 [build-dependencies.winapi-tlb-bindgen]
 git = "https://github.com/Arnavion/winapi-tlb-bindgen"
