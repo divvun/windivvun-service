@@ -11,6 +11,7 @@ lazy_static! {
             let mut tags = vec![];
             for region in &["NO", "SV", "FI"] {
                 tags.push(format!("{}-Latn-{}", tag, region));
+                tags.push(format!("{}-{}", tag, region));
             }
             map.insert(tag.to_string(), tags);
         }
@@ -23,6 +24,8 @@ fn resolve_local_name(neutral_tag: &str) -> Vec<String> {
 
     if let Some(tag) = util::resolve_locale_name(&neutral_tag) {
         tags.push(tag);
+    } else {
+        tags.push(neutral_tag.to_string());
     }
 
     if let Some(extra_tags) = HARDCODED_TAG_TABLE.get(neutral_tag) {
