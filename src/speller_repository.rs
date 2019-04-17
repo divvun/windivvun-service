@@ -100,14 +100,17 @@ impl SpellerRepository {
 
     pub fn get_supported_languages(&self) -> Vec<String> {
         info!("Resolve supported languages");
-        self.get_speller_archives()
+        let mut res: Vec<String> = self.get_speller_archives()
             .iter()
             .filter_map(|path| {
                 path.file_stem()
                     .map(|path| resolve_local_name(&path.to_string_lossy()))
             })
             .flatten()
-            .collect()
+            .collect();
+        res.sort();
+        res.dedup();
+        res
     }
 
     pub fn get_speller_archive(&self, language_tag: &str) -> Option<PathBuf> {
