@@ -99,6 +99,22 @@ fn initialize_logging() -> Option<()> {
     Some(())
 }
 
+#[cfg(windows)]
+fn print_message(msg: &str) -> Result<i32, std::io::Error> {
+    use std::io::Error;
+    use std::ffi::OsStr;
+    use std::iter::once;
+    use std::os::windows::ffi::OsStrExt;
+    use std::ptr::null_mut;
+    use winapi::um::winuser::{MB_OK, MessageBoxW};
+    let wide: Vec<u16> = OsStr::new(msg).encode_wide().chain(once(0)).collect();
+    let ret = unsafe {
+        MessageBoxW(null_mut(), wide.as_ptr(), wide.as_ptr(), MB_OK)
+    };
+    if ret == 0 { Err(Error::last_os_error()) }
+    else { Ok(ret) }
+}
+
 #[no_mangle]
 extern "stdcall" fn DllCanUnloadNow() -> HRESULT {
     info!("DllCanUnloadNow");
@@ -115,6 +131,8 @@ extern "stdcall" fn DllMain(module: u32, reason_for_call: u32, reserved: PVOID) 
             info!("Library loaded! procid = {}", std::process::id());
             info!("{:?}", std::env::current_dir());
             info!("{:?}", std::env::current_exe());
+
+            // print_message("load");
         }
         DLL_PROCESS_DETACH => {
             info!("Library unloaded :(");

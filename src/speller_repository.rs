@@ -9,7 +9,7 @@ lazy_static! {
         let mut map = HashMap::new();
         for tag in &["se", "sma", "smn", "sms", "smj"] {
             let mut tags = vec![];
-            for region in &["NO", "SV", "FI"] {
+            for region in &["NO", "SE", "FI"] {
                 tags.push(format!("{}-Latn-{}", tag, region));
                 tags.push(format!("{}-{}", tag, region));
             }
