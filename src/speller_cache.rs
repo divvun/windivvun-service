@@ -20,7 +20,10 @@ fn suggest_internal(speller: &Arc<Speller<HfstTransducer>>, word: &str) -> Vec<S
         n_best: Some(5),
         max_weight: Some(50.0),
         beam: None,
-        with_caps: true
+        with_caps: true,
+        pool_max: 128,
+        pool_start: 128,
+        seen_node_sample_rate: 20,
     };
 
     let res: Vec<String> = speller
