@@ -37,17 +37,21 @@ jobs:
       $Env:PATH += ";$(System.DefaultWorkingDirectory)"
       $version = Select-String -Path .\Cargo.toml -Pattern "^version.*=.*$"
       $version = $version.Matches[0].Value.Replace('"', '').Replace(' ','').Replace('version=','')
-      divvun-bundler -t win -H "WinDivvun Speller Engine" -V $version --uuid "FB90E8B8-EBE5-51BC-9BDE-28535417088D" -R -c .\enc\creds\windows\divvun.pfx checker --a32 .\target\i686-pc-windows-msvc\release\windivvun.dll --a64 .\target\x86_64-pc-windows-msvc\release\windivvun.dll
-      ls
+      divvun-bundler -t win -H "WinDivvun Speller Engine" -V $version --uuid "{FB90E8B8-EBE5-51BC-9BDE-28535417088D}" -R -c .\enc\creds\windows\divvun.pfx checker --a32 .\target\i686-pc-windows-msvc\release\windivvun.dll --a64 .\target\x86_64-pc-windows-msvc\release\windivvun.dll
+      Rename-Item windivvun-$version.exe windivvun.exe
     displayName: 'Bundle'
     env:
       SIGN_PFX_PASSWORD: $(pfxPassword)
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathtoPublish: '$(System.DefaultWorkingDirectory)/windivvun.exe'
+      artifactName: macos
   - powershell: |
       . .\divvun-ci-config\repo\scripts\PahkatDeploySvn.ps1
       $Env:PATH += ";$(System.DefaultWorkingDirectory)"
       $version = Select-String -Path .\Cargo.toml -Pattern "^version.*=.*$"
       $version = $version.Matches[0].Value.Replace('"', '').Replace(' ','').Replace('version=','')
-      PahkatDeploySvn -SvnUrl https://pahkat.uit.no/repo/windows -Artifact "$(System.DefaultWorkingDirectory)\windivvun-$version.exe" -Package windivvun -Version $version
+      PahkatDeploySvn -SvnUrl https://pahkat.uit.no/repo/windows -Artifact "$(System.DefaultWorkingDirectory)\windivvun.exe" -Package windivvun -Version $version
     displayName: 'Deploy to nightly channel'
     env:
       DEPLOY_SVN_USER: $(svnUser)
