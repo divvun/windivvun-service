@@ -45,7 +45,7 @@ jobs:
   - task: PublishBuildArtifacts@1
     inputs:
       pathtoPublish: '$(System.DefaultWorkingDirectory)/windivvun.exe'
-      artifactName: macos
+      artifactName: windows
   - powershell: |
       . .\divvun-ci-config\repo\scripts\PahkatDeploySvn.ps1
       $Env:PATH += ";$(System.DefaultWorkingDirectory)"
