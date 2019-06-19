@@ -1,4 +1,4 @@
-#![feature(integer_atomics)]
+// #![feature(integer_atomics)]
 #![feature(arbitrary_self_types)]
 #![allow(unused_variables)]
 

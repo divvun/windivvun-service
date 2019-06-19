@@ -12,7 +12,7 @@ crate-type = ["dylib"]
 log = "0.4"
 directories = "1.0.2"
 lazy_static = "1.2.0"
-parking_lot = { version = "0.6", features = ["nightly"] }
+parking_lot = { version = "0.8" }
 
 [dependencies.log4rs]
 version = "0.8.1"

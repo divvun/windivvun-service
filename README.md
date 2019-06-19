@@ -2,6 +2,8 @@
 
 The speller service for Windows.
 
+[![Build Status](https://dev.azure.com/divvun/divvun-service/_apis/build/status/divvun.windivvun-service?branchName=master)](https://dev.azure.com/divvun/divvun-service/_build/latest?definitionId=2&branchName=master)
+
 ## Compile
 
 1. Install the Rust toolchain with rustup.rs - use `nightly-i686-pc-window-msvc` or you will have a bad time.
