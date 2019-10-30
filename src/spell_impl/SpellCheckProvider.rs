@@ -1,7 +1,6 @@
 #![cfg(windows)]
 #![allow(non_snake_case)]
 
-use backtrace::Backtrace;
 use winapi::ctypes::c_void;
 use winapi::shared::guiddef::{IsEqualGUID, GUID};
 use winapi::shared::ntdef::ULONG;

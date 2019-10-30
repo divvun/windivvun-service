@@ -1,4 +1,4 @@
-use divvunspell::archive::{zip::HfstZipSpeller, ZipSpellerArchive};
+use divvunspell::archive::zip::HfstZipSpeller;
 use divvunspell::speller::SpellerConfig;
 
 use parking_lot::RwLock;
