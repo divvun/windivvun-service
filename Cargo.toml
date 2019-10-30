@@ -9,19 +9,17 @@ name = "windivvun"
 crate-type = ["dylib"]
 
 [dependencies]
-log = "0.4"
-directories = "1.0.2"
-lazy_static = "1.2.0"
-parking_lot = { version = "0.8" }
-
-[dependencies.log4rs]
-version = "0.8.1"
+log = "0.4.8"
+directories = "2.0.2"
+lazy_static = "1.4.0"
+parking_lot = "0.9.0"
+log4rs = "0.8.3"
 
 [dependencies.com-impl]
 git = "https://github.com/bbqsrc/com-impl-rs"
 
 [dependencies.winapi]
-version = "0.3.6"
+version = "0.3.8"
 features = ["winerror", "unknwnbase", "objbase", "oleauto", "winerror", "shlobj", "shtypes", "combaseapi", "knownfolders", "winuser", "winnls"]
 
 [dependencies.divvunspell]
