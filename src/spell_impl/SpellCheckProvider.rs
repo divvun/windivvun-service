@@ -1,6 +1,7 @@
-#![cfg(windows)] 
+#![cfg(windows)]
 #![allow(non_snake_case)]
 
+use backtrace::Backtrace;
 use winapi::ctypes::c_void;
 use winapi::shared::guiddef::{IsEqualGUID, GUID};
 use winapi::shared::ntdef::ULONG;
@@ -19,9 +20,7 @@ use crate::spellcheckprovider::{IEnumSpellingError, ISpellCheckProvider, ISpellC
 
 use com_impl::{implementation, interface, ComInterface};
 
-use divvunspell::archive::SpellerArchive;
-use divvunspell::speller::Speller;
-use divvunspell::transducer::HfstTransducer;
+use divvunspell::archive::{zip::HfstZipSpeller, ZipSpellerArchive};
 
 use std::collections::HashMap;
 
@@ -44,7 +43,7 @@ ENUM! {enum WORDLIST_TYPE {
 pub struct DivvunSpellCheckProvider {
     refs: AtomicU32,
     language_tag: String,
-    speller: Arc<Speller<HfstTransducer>>,
+    speller: Arc<HfstZipSpeller>,
     speller_cache: Arc<SpellerCache>,
     wordlists: Arc<Wordlists>,
 }
@@ -250,12 +249,11 @@ impl DivvunSpellCheckProvider {
 
         info!("Instanciating speller {} at {}", language_tag, archive_path);
 
-        let archive = SpellerArchive::new(&archive_path);
+        let archive = ZipSpellerArchive::open(&archive_path);
         if let Err(err) = archive {
             error!("failed to load speller archive: {:?}", err);
             return None;
         }
-
         let speller = archive.unwrap().speller();
 
         let s = Self {

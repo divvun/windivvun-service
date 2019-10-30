@@ -1,5 +1,5 @@
-use divvunspell::speller::{Speller, SpellerConfig};
-use divvunspell::transducer::HfstTransducer;
+use divvunspell::archive::{zip::HfstZipSpeller, ZipSpellerArchive};
+use divvunspell::speller::SpellerConfig;
 
 use parking_lot::RwLock;
 use std::collections::HashMap;
@@ -8,23 +8,15 @@ use std::sync::Arc;
 use std::thread;
 
 pub struct SpellerCache {
-    speller: Arc<Speller<HfstTransducer>>,
+    speller: Arc<HfstZipSpeller>,
     //speller_config: SpellerConfig,
     is_correct: RwLock<HashMap<String, bool>>,
     suggestions: Arc<RwLock<HashMap<String, Vec<String>>>>,
     sender: Sender<String>,
 }
 
-fn suggest_internal(speller: &Arc<Speller<HfstTransducer>>, word: &str) -> Vec<String> {
-    let speller_config = SpellerConfig {
-        n_best: Some(5),
-        max_weight: Some(50.0),
-        beam: None,
-        with_caps: true,
-        pool_max: 128,
-        pool_start: 128,
-        seen_node_sample_rate: 20,
-    };
+fn suggest_internal(speller: &Arc<HfstZipSpeller>, word: &str) -> Vec<String> {
+    let speller_config = SpellerConfig::default();
 
     let res: Vec<String> = speller
         .to_owned()
@@ -36,7 +28,7 @@ fn suggest_internal(speller: &Arc<Speller<HfstTransducer>>, word: &str) -> Vec<S
 }
 
 impl SpellerCache {
-    pub fn new(speller: Arc<Speller<HfstTransducer>>) -> Arc<Self> {
+    pub fn new(speller: Arc<HfstZipSpeller>) -> Arc<Self> {
         let (tx, rx) = channel();
 
         let result = Arc::new(Self {

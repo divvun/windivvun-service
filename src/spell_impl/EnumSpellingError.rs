@@ -1,4 +1,4 @@
-#![cfg(windows)] 
+#![cfg(windows)]
 #![allow(non_snake_case)]
 
 use winapi::shared::guiddef::{IsEqualGUID, GUID};
@@ -20,9 +20,9 @@ use com_impl::{implementation, interface, ComInterface};
 use divvunspell::tokenizer::Tokenize;
 
 use crate::speller_cache::SpellerCache;
-use std::sync::Arc;
 use crate::util;
 use crate::wordlists::Wordlists;
+use std::sync::Arc;
 
 #[interface(ISpellingError)]
 pub struct DivvunSpellingError {
@@ -130,7 +130,8 @@ impl DivvunEnumSpellingError {
 
         let tokenizer_start = self.text_offset;
 
-        let tokens = self.text[tokenizer_start..].word_bound_indices()
+        let tokens = self.text[tokenizer_start..]
+            .word_bound_indices()
             .filter(|(i, s)| s.chars().any(|ch| ch.is_alphanumeric()));
 
         for (start, word) in tokens {
@@ -187,7 +188,8 @@ impl DivvunEnumSpellingError {
             info!("Rstart {}, Rlength {}", start, word.len());
 
             let start = byte_off_to_idx(&self.text, tokenizer_start + start);
-            let length = byte_off_to_idx(&self.text, start + word.len()) - byte_off_to_idx(&self.text, start);
+            let length = byte_off_to_idx(&self.text, start + word.len())
+                - byte_off_to_idx(&self.text, start);
 
             info!("start {}, length {}", start, length);
 
