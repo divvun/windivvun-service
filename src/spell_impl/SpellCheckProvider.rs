@@ -1,4 +1,4 @@
-#![cfg(windows)] 
+#![cfg(windows)]
 #![allow(non_snake_case)]
 
 use winapi::ctypes::c_void;
@@ -19,7 +19,7 @@ use crate::spellcheckprovider::{IEnumSpellingError, ISpellCheckProvider, ISpellC
 
 use com_impl::{implementation, interface, ComInterface};
 
-use divvunspell::archive::{ZipSpellerArchive, zip::HfstZipSpeller};
+use divvunspell::archive::{zip::HfstZipSpeller, ZipSpellerArchive};
 
 use std::collections::HashMap;
 
@@ -253,7 +253,6 @@ impl DivvunSpellCheckProvider {
             error!("failed to load speller archive: {:?}", err);
             return None;
         }
-
         let speller = archive.unwrap().speller();
 
         let s = Self {

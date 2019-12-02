@@ -1,5 +1,5 @@
-use divvunspell::speller::{SpellerConfig};
-use divvunspell::archive::{ZipSpellerArchive, zip::HfstZipSpeller};
+use divvunspell::archive::zip::HfstZipSpeller;
+use divvunspell::speller::SpellerConfig;
 
 use parking_lot::RwLock;
 use std::collections::HashMap;

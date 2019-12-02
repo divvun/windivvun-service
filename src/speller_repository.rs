@@ -1,6 +1,6 @@
-use std::{io, fs};
-use std::path::{Path, PathBuf};
 use std::collections::HashMap;
+use std::path::{Path, PathBuf};
+use std::{fs, io};
 
 use crate::util;
 
@@ -40,7 +40,7 @@ pub struct SpellerRepository {
 }
 
 fn find_zhfsts(dir: &Path) -> Vec<PathBuf> {
-    let mut results: Vec<PathBuf> = vec!();
+    let mut results: Vec<PathBuf> = vec![];
 
     fn visit_dirs(dir: &Path, results: &mut Vec<PathBuf>) -> io::Result<()> {
         if dir.is_dir() {
@@ -52,7 +52,7 @@ fn find_zhfsts(dir: &Path) -> Vec<PathBuf> {
                 } else {
                     if let Some(ext) = path.extension() {
                         if ext == "zhfst" {
-                           results.push(path.to_owned());
+                            results.push(path.to_owned());
                         }
                     }
                 }
@@ -61,7 +61,6 @@ fn find_zhfsts(dir: &Path) -> Vec<PathBuf> {
         Ok(())
     }
 
-    
     let err = visit_dirs(dir, &mut results);
     if let Err(e) = err {
         error!("Error listing {:?}: {:?}", dir, e);
@@ -100,7 +99,8 @@ impl SpellerRepository {
 
     pub fn get_supported_languages(&self) -> Vec<String> {
         info!("Resolve supported languages");
-        let mut res: Vec<String> = self.get_speller_archives()
+        let mut res: Vec<String> = self
+            .get_speller_archives()
             .iter()
             .filter_map(|path| {
                 path.file_stem()

@@ -1,4 +1,4 @@
-#![cfg(windows)] 
+#![cfg(windows)]
 #![allow(non_snake_case)]
 
 use winapi::um::winnt::HRESULT;
@@ -15,8 +15,8 @@ use std::sync::atomic::{AtomicU32, Ordering};
 
 use com_impl::{implementation, interface, ComInterface};
 
-use std::vec::Vec;
 use crate::util;
+use std::vec::Vec;
 
 #[interface(IEnumString)]
 pub struct EnumString {
