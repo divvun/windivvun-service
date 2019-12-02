@@ -53,7 +53,6 @@ jobs:
           $version = Select-String -Path .\Cargo.toml -Pattern "^version.*=.*$"
           $version = $version.Matches[0].Value.Replace('"', '').Replace(' ','').Replace('version=','')
           PahkatDeploySvn -SvnUrl https://pahkat.uit.no/repo/windows -Artifact "$(System.DefaultWorkingDirectory)\windivvun.exe" -Package windivvun -Version $version
-          PahkatDeploySvn -SvnUrl https://pahkat.uit.no/repo/misc-win -Artifact "$(System.DefaultWorkingDirectory)\windivvun.exe" -Package windivvun -Version $version
           PahkatDeploySvn -SvnUrl https://pahkat.uit.no/repo/canada-win -Artifact "$(System.DefaultWorkingDirectory)\windivvun.exe" -Package windivvun -Version $version
         displayName: "Deploy to nightly channel"
         condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
