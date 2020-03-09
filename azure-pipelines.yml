@@ -8,7 +8,7 @@ jobs:
       vmImage: "vs2017-win2016"
     steps:
       - bash: |
-          set -e
+          set -ex
           curl -sLo LockedList.zip https://nsis.sourceforge.io/mediawiki/images/d/d3/LockedList.zip
           unzip LockedList.zip "Plugins/*" -d "C:\Program Files (x86)\NSIS" -q
           unzip LockedList.zip "Plugins/x86-ansi/*" -d "C:\Program Files (x86)\NSIS" -q
@@ -16,7 +16,10 @@ jobs:
           curl -sLo pahkat.exe https://github.com/divvun/pahkat/releases/download/0.6.0/pahkat.exe
           curl -sLo divvun-bundler.exe https://github.com/divvun/divvun-bundler/releases/download/0.1.0/divvun-bundler.exe
           curl -sLo rustup-init.exe https://win.rustup.rs/
-          ./rustup-init.exe -y --default-host=i686-pc-windows-msvc --default-toolchain=stable-i686-pc-windows-msvc
+          ./rustup-init.exe -y --default-host x86_64-pc-windows-msvc --default-toolchain stable
+          rustup set default-host i686-pc-windows-msvc
+          rustup toolchain install stable
+          rustup default stable
           git clone https://github.com/divvun/divvun-ci-config.git
           openssl aes-256-cbc -d -in ./divvun-ci-config/config.txz.enc -pass pass:$DIVVUN_KEY -out config.txz -md md5
           7z e config.txz
@@ -27,10 +30,10 @@ jobs:
       - script: |
           PATH=%PATH%;%USERPROFILE%\.cargo\bin
           call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
-          rustup default nightly-i686-pc-windows-msvc
+          rustup default stable-i686-pc-windows-msvc
           cargo build --target=i686-pc-windows-msvc --release
           call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
-          rustup default nightly-x86_64-pc-windows-msvc
+          rustup default stable-x86_64-pc-windows-msvc
           cargo build --target=x86_64-pc-windows-msvc --release
         displayName: "Build"
       - powershell: |
