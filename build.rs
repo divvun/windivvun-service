@@ -57,10 +57,12 @@ fn main() {
         idl_out
     };
 
-    let mut midl_path = r"C:\Program Files (x86)\Windows Kits\10\bin\x86\midl.exe";
-    if !std::path::Path::new(midl_path).exists() {
-        midl_path = "midl.exe"
-    }
+    let mut midl_paths = vec![
+        r"C:\Program Files (x86)\Windows Kits\10\bin\x86\midl.exe",
+        r"C:\Program Files (x86)\Windows Kits\10\bin\10.0.18362.0\x86\midl.exe"
+    ];
+
+    let midl_path = midl_paths.into_iter().filter(|p| std::path::Path::new(p).exists()).next().unwrap_or("midl.exe");
     let midl_command_status = std::process::Command::new(midl_path) // Expected to be running in "x64 Native Tools Command Prompt"
         .arg(idl_out)
         .arg("/tlb")

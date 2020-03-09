@@ -1,5 +1,5 @@
 // #![feature(integer_atomics)]
-#![feature(arbitrary_self_types)]
+// #![feature(arbitrary_self_types)]
 #![allow(unused_variables)]
 
 #[macro_use]

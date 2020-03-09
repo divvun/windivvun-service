@@ -16,7 +16,7 @@ jobs:
           curl -sLo pahkat.exe https://github.com/divvun/pahkat/releases/download/0.6.0/pahkat.exe
           curl -sLo divvun-bundler.exe https://github.com/divvun/divvun-bundler/releases/download/0.1.0/divvun-bundler.exe
           curl -sLo rustup-init.exe https://win.rustup.rs/
-          ./rustup-init.exe -y --default-host=i686-pc-windows-msvc --default-toolchain=nightly-i686-pc-windows-msvc
+          ./rustup-init.exe -y --default-host=i686-pc-windows-msvc --default-toolchain=stable-i686-pc-windows-msvc
           git clone https://github.com/divvun/divvun-ci-config.git
           openssl aes-256-cbc -d -in ./divvun-ci-config/config.txz.enc -pass pass:$DIVVUN_KEY -out config.txz -md md5
           7z e config.txz
