@@ -15,15 +15,39 @@ jobs:
           toolchain: stable
           profile: minimal
           override: true
+      - name: Build
+        shell: cmd
+        run: |
+          rustup set default-host i686-pc-windows-msvc
+
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
+          rustup default stable-i686-pc-windows-msvc
+          cargo build --target=i686-pc-windows-msvc --release
+          
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+          rustup default stable-x86_64-pc-windows-msvc
+          cargo build --target=x86_64-pc-windows-msvc --release
+          ls
       - name: Run Divvun Bundler
         id: bundler
+        shell: bash
         run: |
-          $version = cargo metadata --no-deps --format-version=1 | jq -r '.packages[] | select(.name==\"windivvun\") | .version'
-          divvun-bundler.exe -t win -H "WinDivvun Speller Engine" `
-            -V $version --uuid "{FB90E8B8-EBE5-51BC-9BDE-28535417088D}" -R -c "$DIVVUN_CI_CONFIG\enc\creds\windows\divvun.pfx" checker `
-            --a32 .\target\i686-pc-windows-msvc\release\windivvun.dll --a64 .\target\x86_64-pc-windows-msvc\release\windivvun.dll
-          echo "::set-env name=DEPLOY_VERSION::$version"
-          echo "::set-output name=installer::windivvun-$version.exe"
+          set -e
+          ls -lah
+          ls -lah $GITHUB_WORKSPACE/target/x86_64-pc-windows-msvc
+          ls -lah $GITHUB_WORKSPACE/target/i686-pc-windows-msvc
+          ls -lah $GITHUB_WORKSPACE/target/x86_64-pc-windows-msvc/release
+          ls -lah $GITHUB_WORKSPACE/target/i686-pc-windows-msvc/release
+          ls -lah $GITHUB_WORKSPACE/target/i686-pc-windows-msvc/release
+          ls -lah $GITHUB_WORKSPACE/target/release
+          source "$DIVVUN_CI_CONFIG/enc/env.sh"
+          VERSION=`cargo metadata --no-deps --format-version=1 | jq -r '.packages[] | select(.name=="windivvun") | .version'`
+          divvun-bundler.exe -t win -H "WinDivvun Speller Engine" \
+            -V $VERSION --uuid "{FB90E8B8-EBE5-51BC-9BDE-28535417088D}" -R -c "$DIVVUN_CI_CONFIG\enc\creds\windows\divvun.pfx" checker \
+            --a32 "$GITHUB_WORKSPACE/target/i686-pc-windows-msvc/release/windivvun.dll" \
+            --a64 "$GITHUB_WORKSPACE/target/x86_64-pc-windows-msvc/release/windivvun.dll"
+          echo "::set-env name=DEPLOY_VERSION::$VERSION"
+          echo "::set-output name=installer::windivvun-$VERSION.exe"
       - name: Upload installer
         uses: actions/upload-artifact@v2
         with:
@@ -36,5 +60,5 @@ jobs:
           repository: "https://pahkat.uit.no/tools"
           package: "windivvung"
           platform: "windows"
-          version: ${{ env.DEPLOY_VERSION }}
+          version: "${{ env.DEPLOY_VERSION }}"
 
