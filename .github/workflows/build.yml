@@ -1,0 +1,40 @@
+on: push
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Divvun CI
+        uses: divvun/actions/setup@master
+        with:
+          key: ${{ secrets.DIVVUN_KEY }}
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+      - name: Run Divvun Bundler
+        id: bundler
+        run: |
+          $version = cargo metadata --no-deps --format-version=1 | jq -r '.packages[] | select(.name==\"windivvun\") | .version'
+          divvun-bundler.exe -t win -H "WinDivvun Speller Engine" `
+            -V $version --uuid "{FB90E8B8-EBE5-51BC-9BDE-28535417088D}" -R -c "$DIVVUN_CI_CONFIG\enc\creds\windows\divvun.pfx" checker `
+            --a32 .\target\i686-pc-windows-msvc\release\windivvun.dll --a64 .\target\x86_64-pc-windows-msvc\release\windivvun.dll
+          echo "::set-env name=DEPLOY_VERSION::$version"
+          echo "::set-output name=installer::windivvun-$version.exe"
+      - name: Upload installer
+        uses: actions/upload-artifact@v2
+        with:
+          name: installer
+          path: "${{ steps.bundler.outputs.installer }}"
+      - name: Deploy to Pahkat
+        uses: divvun/actions/deploy@master
+        with:
+          payload: "${{ steps.bundler.outputs.installer }}"
+          repository: "https://pahkat.uit.no/tools"
+          package: "windivvung"
+          platform: "windows"
+          version: ${{ env.DEPLOY_VERSION }}
+
