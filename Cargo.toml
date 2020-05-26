@@ -1,6 +1,6 @@
 [package]
 name = "windivvun"
-version = "0.2.1"
+version = "1.0.1"
 authors = ["Eike Siewertsen <eike@technocreatives.com>"]
 edition = "2018"
 
