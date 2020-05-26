@@ -12,8 +12,8 @@ crate-type = ["dylib"]
 log = "0.4.8"
 directories = "2.0.2"
 lazy_static = "1.4.0"
-parking_lot = "0.10.0"
-log4rs = "0.10.0"
+parking_lot = "0.10.2"
+log4rs = "0.12.0"
 
 [dependencies.com-impl]
 git = "https://github.com/bbqsrc/com-impl-rs"
@@ -24,7 +24,7 @@ features = ["winerror", "unknwnbase", "objbase", "oleauto", "winerror", "shlobj"
 
 [dependencies.divvunspell]
 git = "https://github.com/divvun/divvunspell"
-branch = "develop"
+branch = "master"
 features = ["compression"]
 
 [build-dependencies.winapi-tlb-bindgen]
