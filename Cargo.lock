@@ -1316,7 +1316,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "windivvun"
-version = "0.2.1"
+version = "1.0.1"
 dependencies = [
  "com-impl 0.1.0 (git+https://github.com/bbqsrc/com-impl-rs)",
  "directories 2.0.2 (registry+https://github.com/rust-lang/crates.io-index)",

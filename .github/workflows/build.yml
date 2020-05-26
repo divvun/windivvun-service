@@ -14,7 +14,6 @@ jobs:
         with:
           toolchain: stable
           profile: minimal
-          override: true
       - name: Build
         shell: cmd
         run: |
@@ -38,11 +37,10 @@ jobs:
           ls -lah $GITHUB_WORKSPACE/target/i686-pc-windows-msvc
           ls -lah $GITHUB_WORKSPACE/target/x86_64-pc-windows-msvc/release
           ls -lah $GITHUB_WORKSPACE/target/i686-pc-windows-msvc/release
-          ls -lah $GITHUB_WORKSPACE/target/i686-pc-windows-msvc/release
           ls -lah $GITHUB_WORKSPACE/target/release
           source "$DIVVUN_CI_CONFIG/enc/env.sh"
           VERSION=`cargo metadata --no-deps --format-version=1 | jq -r '.packages[] | select(.name=="windivvun") | .version'`
-          divvun-bundler.exe -t win -H "WinDivvun Speller Engine" \
+          RUST_LOG="info" divvun-bundler.exe -t win -H "WinDivvun Speller Engine" \
             -V $VERSION --uuid "{FB90E8B8-EBE5-51BC-9BDE-28535417088D}" -R -c "$DIVVUN_CI_CONFIG\enc\creds\windows\divvun.pfx" checker \
             --a32 "$GITHUB_WORKSPACE/target/i686-pc-windows-msvc/release/windivvun.dll" \
             --a64 "$GITHUB_WORKSPACE/target/x86_64-pc-windows-msvc/release/windivvun.dll"
@@ -58,7 +56,7 @@ jobs:
         with:
           payload: "${{ steps.bundler.outputs.installer }}"
           repository: "https://pahkat.uit.no/tools"
-          package: "windivvung"
+          package: "windivvun"
           platform: "windows"
           version: "${{ env.DEPLOY_VERSION }}"
 
