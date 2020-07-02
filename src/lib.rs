@@ -1,19 +1,10 @@
-// #![feature(integer_atomics)]
-// #![feature(arbitrary_self_types)]
 #![allow(unused_variables)]
 
 #[macro_use]
 extern crate winapi;
-extern crate com_impl;
-extern crate divvunspell;
-
-extern crate parking_lot;
 
 #[macro_use]
 extern crate log;
-extern crate directories;
-extern crate log4rs;
-
 #[macro_use]
 extern crate lazy_static;
 
@@ -77,12 +68,10 @@ lazy_static! {
 }
 
 fn initialize_logging() -> Option<()> {
-    let mut path = PathBuf::from(util::get_module_path().unwrap())
-        .parent()
-        .unwrap()
-        .to_path_buf();
-    path.push("divvunlog.txt");
+    let log_path = pathos::user::app_log_dir("WinDivvun");
+    std::fs::create_dir_all(&log_path).ok()?;
 
+    let path = log_path.join("service.log");
     let logfile = FileAppender::builder().build(path).ok()?;
 
     let config = Config::builder()

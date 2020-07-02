@@ -1,83 +1,129 @@
-on: push
+name: windivvun
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+      - release
+
+env:
+  RUST_VERSION: stable
+  CARGO_INCREMENTAL: 0
+  RUSTUP_MAX_RETRIES: 10
+  CARGO_NET_RETRY: 10
+  RUST_BACKTRACE: full
 
 jobs:
-  build:
+  deploy:
+    needs: [build-divvunspell-mso, build-windivvun]
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Cache cargo registry
-        uses: actions/cache@v1
-        with:
-          path: ~/.cargo/registry
-          restore-keys: |
-            ${{ runner.os }}-cargo-registry-
-          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-      - name: Cache cargo index
-        uses: actions/cache@v1
-        with:
-          path: ~/.cargo/git
-          restore-keys: |
-            ${{ runner.os }}-cargo-index-
-          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
-      - name: Cache cargo build
-        uses: actions/cache@v1
-        with:
-          path: target
-          restore-keys: |
-            ${{ runner.os }}-cargo-build-target-
-          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
-      - name: Setup Divvun CI
-        uses: divvun/actions/setup@master
-        with:
-          key: ${{ secrets.DIVVUN_KEY }}
-      - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          profile: minimal
-      - name: Build
-        shell: cmd
-        run: |
-          rustup set default-host i686-pc-windows-msvc
-
-          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars32.bat"
-          rustup default stable-i686-pc-windows-msvc
-          cargo build --target=i686-pc-windows-msvc --release
-          
-          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
-          rustup default stable-x86_64-pc-windows-msvc
-          cargo build --target=x86_64-pc-windows-msvc --release
-          ls
-      - name: Run Divvun Bundler
-        id: bundler
-        shell: bash
-        run: |
-          set -e
-          ls -lah
-          ls -lah $GITHUB_WORKSPACE/target/x86_64-pc-windows-msvc
-          ls -lah $GITHUB_WORKSPACE/target/i686-pc-windows-msvc
-          ls -lah $GITHUB_WORKSPACE/target/x86_64-pc-windows-msvc/release
-          ls -lah $GITHUB_WORKSPACE/target/i686-pc-windows-msvc/release
-          ls -lah $GITHUB_WORKSPACE/target/release
-          source "$DIVVUN_CI_CONFIG/enc/env.sh"
-          VERSION=`cargo metadata --no-deps --format-version=1 | jq -r '.packages[] | select(.name=="windivvun") | .version'`
-          RUST_LOG="info" divvun-bundler.exe -t win -H "WinDivvun Speller Engine" \
-            -V $VERSION --uuid "{FB90E8B8-EBE5-51BC-9BDE-28535417088D}" -R -c "$DIVVUN_CI_CONFIG\enc\creds\windows\divvun.pfx" checker \
-            --a32 "$GITHUB_WORKSPACE/target/i686-pc-windows-msvc/release/windivvun.dll" \
-            --a64 "$GITHUB_WORKSPACE/target/x86_64-pc-windows-msvc/release/windivvun.dll"
-          echo "::set-env name=DEPLOY_VERSION::$VERSION"
-          echo "::set-output name=installer::windivvun-$VERSION.exe"
-      - name: Upload installer
-        uses: actions/upload-artifact@v2
-        with:
-          name: installer
-          path: "${{ steps.bundler.outputs.installer }}"
-      - name: Deploy to Pahkat
-        uses: divvun/actions/deploy@master
-        with:
-          payload: "${{ steps.bundler.outputs.installer }}"
-          repository: "https://pahkat.uit.no/tools"
-          package: "windivvun"
-          platform: "windows"
-          version: "${{ env.DEPLOY_VERSION }}"
+    - uses: actions/download-artifact@v2
+      with:
+        path: artifacts
+    - name: Display structure of downloaded files
+      run: ls -r
+      working-directory: artifacts
+  build-divvunspell-mso:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - triple: i686-pc-windows-msvc
+            vcvars: vcvars32.bat
+            arch: i686
+          - triple: x86_64-pc-windows-msvc
+            vcvars: vcvars64.bat
+            arch: x86_64
+    steps:
+    - name: Checkout mso-nda-resources
+      uses: actions/checkout@v2
+      with:
+        repository: divvun/mso-nda-resources
+        token: ${{ secrets.REPO_TOKEN }}
+    - name: Setup Divvun CI
+      uses: divvun/actions/setup@master
+      with:
+        key: ${{ secrets.DIVVUN_KEY }}
+    - name: Get version
+      id: version
+      uses: divvun/actions/version@develop
+      with:
+        cargo: divvunspell-mso/Cargo.toml
+        nightly: master, develop
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Install Rust toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable-${{ matrix.triple }}
+        profile: minimal
+        override: true 
+    - name: Build
+      shell: cmd
+      run: |
+        cd divvunspell-mso
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\${{ matrix.vcvars }}"
+        cargo build --target ${{ matrix.triple }} --release
+      env:
+        RUSTC_BOOTSTRAP: 1
+        SENTRY_DSN: ${{ secrets.MSO_DSN }}
+    - name: Code sign
+      uses: divvun/actions/codesign@develop
+      with:
+        path: target/${{ matrix.triple }}/release/divvunspellmso.dll
+    - name: Upload divvunspell-mso (${{ matrix.arch }})
+      uses: actions/upload-artifact@v2
+      with:
+        name: divvunspell-mso-${{ matrix.arch }}
+        path: target/${{ matrix.triple }}/release/divvunspellmso.dll
+  build-windivvun:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - triple: i686-pc-windows-msvc
+            vcvars: vcvars32.bat
+            arch: i686
+          - triple: x86_64-pc-windows-msvc
+            vcvars: vcvars64.bat
+            arch: x86_64
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+    - name: Setup Divvun CI
+      uses: divvun/actions/setup@master
+      with:
+        key: ${{ secrets.DIVVUN_KEY }}
+    - name: Get version
+      id: version
+      uses: divvun/actions/version@develop
+      with:
+        cargo: true
+        nightly: master, develop
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Install Rust toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable-${{ matrix.triple }}
+        profile: minimal
+        override: true
+    - name: Build
+      shell: cmd
+      run: |
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\${{ matrix.vcvars }}"
+        cargo build --target ${{ matrix.triple }} --release
+      env:
+        RUSTC_BOOTSTRAP: 1
+    - name: Code sign
+      uses: divvun/actions/codesign@develop
+      with:
+        path: target/${{ matrix.triple }}/release/windivvun.dll
+    - name: Upload windivvun (${{ matrix.arch }})
+      uses: actions/upload-artifact@v2
+      with:
+        name: windivvun-${{ matrix.arch }}
+        path: target/${{ matrix.triple }}/release/windivvun.dll
 

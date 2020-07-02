@@ -1,6 +1,6 @@
 [package]
 name = "windivvun"
-version = "1.0.1"
+version = "1.1.0"
 authors = ["Eike Siewertsen <eike@technocreatives.com>"]
 edition = "2018"
 
@@ -10,10 +10,10 @@ crate-type = ["dylib"]
 
 [dependencies]
 log = "0.4.8"
-directories = "2.0.2"
 lazy_static = "1.4.0"
 parking_lot = "0.10.2"
 log4rs = "0.12.0"
+pathos = "0.1.6"
 
 [dependencies.com-impl]
 git = "https://github.com/bbqsrc/com-impl-rs"
