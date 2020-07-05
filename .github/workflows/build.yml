@@ -19,12 +19,49 @@ jobs:
     needs: [build-divvunspell-mso, build-windivvun]
     runs-on: windows-latest
     steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
     - uses: actions/download-artifact@v2
       with:
         path: artifacts
-    - name: Display structure of downloaded files
-      run: ls -r
-      working-directory: artifacts
+    - name: Setup Divvun CI
+      uses: divvun/actions/setup@master
+      with:
+        key: ${{ secrets.DIVVUN_KEY }}
+    - name: Get version
+      id: version
+      uses: divvun/actions/version@develop
+      with:
+        cargo: true
+        nightly: master, develop
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Install build dependencies
+      uses: divvun/actions/pahkat/init@develop
+      with:
+        repo: https://pahkat.uit.no/devtools/
+        channel: nightly
+        packages: pahkat-uploader, spelli
+    - name: Move artifacts to appropriate directory
+      run: |
+        cp $env:RUNNER_WORKSPACE\pahkat-prefix\pkg\spelli\bin\spelli.exe artifacts\
+    - name: Build installer
+      id: installer
+      uses: divvun/actions/inno-setup@develop
+      with:
+        path: install.iss
+        defines: Version=${{ steps.version.outputs.version }}
+    - name: Deploy
+      uses: divvun/actions/deploy@develop
+      with:
+        package-id: windivvun
+        platform: windows
+        version: ${{ steps.version.outputs.version }}
+        payload-path: ${{ steps.installer.outputs['installer-path'] }}
+        repo: https://pahkat.thetc.se/tools/
+        channel: ${{ steps.version.outputs.channel }}
+        windows-kind: inno
+        windows-product-code: "{41F71B6E-DE82-433D-8659-7E2D7C3B95E2}_is1"
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   build-divvunspell-mso:
     runs-on: windows-latest
     strategy:
@@ -47,13 +84,6 @@ jobs:
       uses: divvun/actions/setup@master
       with:
         key: ${{ secrets.DIVVUN_KEY }}
-    - name: Get version
-      id: version
-      uses: divvun/actions/version@develop
-      with:
-        cargo: divvunspell-mso/Cargo.toml
-        nightly: master, develop
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Install Rust toolchain
       uses: actions-rs/toolchain@v1
       with:
@@ -97,13 +127,6 @@ jobs:
       uses: divvun/actions/setup@master
       with:
         key: ${{ secrets.DIVVUN_KEY }}
-    - name: Get version
-      id: version
-      uses: divvun/actions/version@develop
-      with:
-        cargo: true
-        nightly: master, develop
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Install Rust toolchain
       uses: actions-rs/toolchain@v1
       with:
