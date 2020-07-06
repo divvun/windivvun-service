@@ -22,7 +22,9 @@ Compression=lzma
 SolidCompression=yes
 SignedUninstaller=yes
 SignTool=signtool
-MinVersion=6.3.9200                 
+MinVersion=6.3.9200
+ArchitecturesInstallIn64BitMode=x64
+ArchitecturesAllowed=x86 x64
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -106,7 +108,7 @@ begin
     if CurStep = ssPostInstall then
     begin
         Exec('icacls', ExpandConstant('{app} /grant "ALL APPLICATION PACKAGES":R /T'), '', SW_HIDE, ewWaitUntilTerminated, iResultCode);
-        Exec(ExpandConstant('{app}/i686/spelli.exe'), 'refresh', '', SW_HIDE, ewWaitUntilTerminated, iResultCode);
+        Exec(ExpandConstant('{app}\i686\spelli.exe'), 'refresh', '', SW_HIDE, ewWaitUntilTerminated, iResultCode);
     end;
 end;
 
@@ -118,7 +120,7 @@ var
 begin
     if CurUninstallStep = usUninstall then
     begin
-        Exec(ExpandConstant('{app}/i686/spelli.exe'), 'nuke', '', SW_HIDE, ewWaitUntilTerminated, iResultCode);
+        Exec(ExpandConstant('{app}\i686\spelli.exe'), 'nuke', '', SW_HIDE, ewWaitUntilTerminated, iResultCode);
     end;
 end;
 
