@@ -14,12 +14,13 @@ use winapi::um::unknwnbase::{IUnknown, IUnknownVtbl};
 
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Arc;
+use std::path::Path;
 
 use crate::spellcheckprovider::{IEnumSpellingError, ISpellCheckProvider, ISpellCheckProviderVtbl};
 
 use com_impl::{implementation, interface, ComInterface};
 
-use divvunspell::archive::{zip::HfstZipSpeller, ZipSpellerArchive};
+use divvunspell::archive::{zip::HfstZipSpeller, ZipSpellerArchive, SpellerArchive};
 
 use std::collections::HashMap;
 
@@ -42,7 +43,7 @@ ENUM! {enum WORDLIST_TYPE {
 pub struct DivvunSpellCheckProvider {
     refs: AtomicU32,
     language_tag: String,
-    speller: Arc<HfstZipSpeller>,
+    speller_archive: Arc<ZipSpellerArchive>,
     speller_cache: Arc<SpellerCache>,
     wordlists: Arc<Wordlists>,
 }
@@ -246,21 +247,22 @@ impl DivvunSpellCheckProvider {
         let archive_path = archive_path.to_str()?;
         let archive_path = archive_path.to_string();
 
-        info!("Instanciating speller {} at {}", language_tag, archive_path);
+        info!("Instantiating speller {} at {}", language_tag, archive_path);
 
-        let archive = ZipSpellerArchive::open(&archive_path);
-        if let Err(err) = archive {
-            error!("failed to load speller archive: {:?}", err);
-            return None;
-        }
-        let speller = archive.unwrap().speller();
+        let archive = match ZipSpellerArchive::open(&Path::new(&archive_path)) {
+            Ok(v) => v,
+            Err(err) => {
+                error!("failed to load speller archive: {:?}", err);
+                return None;
+            }
+        };
 
         let s = Self {
             __vtable: Box::new(Self::create_vtable()),
             refs: AtomicU32::new(1),
             language_tag: language_tag.to_string(),
-            speller: speller.clone(),
-            speller_cache: SpellerCache::new(speller),
+            speller_cache: SpellerCache::new(archive.speller()),
+            speller_archive: Arc::new(archive),
             wordlists: Wordlists::new(),
         };
 

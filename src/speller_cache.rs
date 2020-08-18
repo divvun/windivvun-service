@@ -1,5 +1,5 @@
 use divvunspell::archive::zip::HfstZipSpeller;
-use divvunspell::speller::SpellerConfig;
+use divvunspell::speller::{Speller, SpellerConfig};
 
 use parking_lot::RwLock;
 use std::collections::HashMap;
@@ -8,14 +8,14 @@ use std::sync::Arc;
 use std::thread;
 
 pub struct SpellerCache {
-    speller: Arc<HfstZipSpeller>,
+    speller: Arc<dyn Speller + Send + Sync>,
     //speller_config: SpellerConfig,
     is_correct: RwLock<HashMap<String, bool>>,
     suggestions: Arc<RwLock<HashMap<String, Vec<String>>>>,
     sender: Sender<String>,
 }
 
-fn suggest_internal(speller: &Arc<HfstZipSpeller>, word: &str) -> Vec<String> {
+fn suggest_internal(speller: &Arc<dyn Speller + Send + Sync>, word: &str) -> Vec<String> {
     let speller_config = SpellerConfig::default();
 
     let res: Vec<String> = speller
@@ -28,7 +28,7 @@ fn suggest_internal(speller: &Arc<HfstZipSpeller>, word: &str) -> Vec<String> {
 }
 
 impl SpellerCache {
-    pub fn new(speller: Arc<HfstZipSpeller>) -> Arc<Self> {
+    pub fn new(speller: Arc<dyn Speller + Send + Sync>) -> Arc<Self> {
         let (tx, rx) = channel();
 
         let result = Arc::new(Self {
