@@ -1,7 +1,12 @@
 [package]
 name = "windivvun"
-version = "1.1.0"
-authors = ["Eike Siewertsen <eike@technocreatives.com>"]
+description = "Windows spell checking service for DivvunSpell spellers"
+version = "1.2.0"
+authors = [
+    "Eike Siewertsen <eike@technocreatives.com>",
+    "Brendan Molloy <brendan@bbqsrc.net>",
+]
+license = "Apache-2.0 OR MIT"
 edition = "2018"
 
 [lib]
