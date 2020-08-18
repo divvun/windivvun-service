@@ -68,7 +68,7 @@ lazy_static! {
 }
 
 fn initialize_logging() -> Option<()> {
-    let log_path = pathos::user::app_log_dir("WinDivvun");
+    let log_path = pathos::system::app_log_dir("WinDivvun");
     std::fs::create_dir_all(&log_path).ok()?;
 
     let path = log_path.join("service.log");
