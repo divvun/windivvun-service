@@ -54,9 +54,9 @@ lazy_static! {
         // Program Files dictionaries
         {
             let path = PathBuf::from(util::get_module_path().unwrap())
-                .parent()
-                .unwrap()
-                .to_path_buf();
+                .parent().unwrap()
+                .parent().unwrap()
+                .join("Spellers");
             if let Some(path) = path.to_str() {
                 dictionaries.push(path.to_string());
             }
