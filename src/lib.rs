@@ -4,15 +4,12 @@
 extern crate winapi;
 
 #[macro_use]
-extern crate log;
+extern crate tracing;
 #[macro_use]
 extern crate lazy_static;
 
 mod util;
 use crate::util::fmt_guid;
-
-use log4rs::append::file::FileAppender;
-use log4rs::config::{Appender, Config, Root};
 
 mod spell_impl;
 mod spellcheckprovider;
@@ -20,6 +17,7 @@ mod spellcheckprovider;
 use winapi::shared::guiddef::{IsEqualGUID, REFCLSID, REFIID};
 use winapi::shared::ntdef::HRESULT;
 use winapi::shared::winerror::{CLASS_E_CLASSNOTAVAILABLE, S_FALSE, S_OK};
+use winapi::um::consoleapi::AllocConsole;
 use winapi::um::winnt::PVOID;
 use winapi::um::winnt::{DLL_PROCESS_ATTACH, DLL_PROCESS_DETACH};
 use winapi::Interface;
@@ -67,25 +65,23 @@ lazy_static! {
     };
 }
 
-fn initialize_logging() -> Option<()> {
-    let log_path = pathos::system::app_log_dir("WinDivvun");
-    std::fs::create_dir_all(&log_path).ok()?;
-
-    let path = log_path.join("service.log");
-    let logfile = FileAppender::builder().build(path).ok()?;
-
-    let config = Config::builder()
-        .appender(Appender::builder().build("logfile", Box::new(logfile)))
-        .build(
-            Root::builder()
-                .appender("logfile")
-                .build(log::LevelFilter::Info),
-        )
-        .ok()?;
-
-    log4rs::init_config(config).ok()?;
-
-    Some(())
+fn initialize_logging() -> anyhow::Result<(), ()> {
+    let debug_path = PathBuf::from(util::get_module_path().unwrap())
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .join("debug");
+    if debug_path.exists() {
+        unsafe { AllocConsole() };
+        tracing_subscriber::fmt::fmt()
+            .with_env_filter("windivvun=trace")
+            .init();
+        debug!("# Logging initialized");
+        debug!(r"[!] To disable, delete: {} [!]", debug_path.display());
+        debug!("User: {}", whoami::username());
+    }
+    Ok(())
 }
 
 #[cfg(windows)]
@@ -114,9 +110,10 @@ extern "stdcall" fn DllCanUnloadNow() -> HRESULT {
 
 #[no_mangle]
 extern "stdcall" fn DllMain(module: u32, reason_for_call: u32, reserved: PVOID) -> bool {
+    std::env::set_var("RUST_BACKTRACE", "full");
     match reason_for_call {
         DLL_PROCESS_ATTACH => {
-            initialize_logging();
+            initialize_logging().unwrap();
 
             info!("Library loaded! procid = {}", std::process::id());
             info!("{:?}", std::env::current_dir());

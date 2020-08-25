@@ -14,11 +14,15 @@ name = "windivvun"
 crate-type = ["dylib"]
 
 [dependencies]
-log = "0.4.11"
 lazy_static = "1.4.0"
 parking_lot = "0.11.0"
-log4rs = "0.13.0"
 pathos = "0.1.7"
+chrono = "0.4.15"
+anyhow = "1.0.32"
+eventlog = "0.1.0"
+tracing = "0.1.19"
+tracing-subscriber = { version = "0.2.11", features = ["fmt"] }
+whoami = "0.9.0"
 
 [dependencies.com-impl]
 git = "https://github.com/bbqsrc/com-impl-rs"

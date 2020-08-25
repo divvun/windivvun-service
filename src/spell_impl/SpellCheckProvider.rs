@@ -12,15 +12,15 @@ use winapi::um::winnt::{HRESULT, LPCWSTR};
 
 use winapi::um::unknwnbase::{IUnknown, IUnknownVtbl};
 
+use std::path::Path;
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Arc;
-use std::path::Path;
 
 use crate::spellcheckprovider::{IEnumSpellingError, ISpellCheckProvider, ISpellCheckProviderVtbl};
 
 use com_impl::{implementation, interface, ComInterface};
 
-use divvunspell::archive::{zip::HfstZipSpeller, ZipSpellerArchive, SpellerArchive};
+use divvunspell::archive::{SpellerArchive, ZipSpellerArchive};
 
 use std::collections::HashMap;
 
