@@ -106,7 +106,7 @@ dependencies = [
 [[package]]
 name = "box_format"
 version = "0.2.0"
-source = "git+https://github.com/bbqsrc/box?branch=master#b21cfcf318d9428184e09071857267feaef398fd"
+source = "git+https://github.com/bbqsrc/box#b21cfcf318d9428184e09071857267feaef398fd"
 dependencies = [
  "byteorder",
  "comde",
@@ -358,7 +358,7 @@ dependencies = [
 [[package]]
 name = "divvunspell"
 version = "1.0.0-alpha.4"
-source = "git+https://github.com/divvun/divvunspell?branch=master#9c70bc61a5a3eb03a6f8258e8882e01ec6e8a827"
+source = "git+https://github.com/divvun/divvunspell#9c70bc61a5a3eb03a6f8258e8882e01ec6e8a827"
 dependencies = [
  "box_format",
  "byteorder",
@@ -1690,7 +1690,7 @@ checksum = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"
 
 [[package]]
 name = "windivvun"
-version = "1.3.0"
+version = "1.3.1"
 dependencies = [
  "anyhow",
  "chrono",
