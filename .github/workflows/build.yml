@@ -1,11 +1,6 @@
 name: windivvun
 
-on:
-  push:
-    branches:
-      - master
-      - develop
-      - release
+on: push
 
 env:
   RUST_VERSION: stable
@@ -30,13 +25,12 @@ jobs:
         key: ${{ secrets.DIVVUN_KEY }}
     - name: Get version
       id: version
-      uses: divvun/actions/version@develop
+      uses: divvun/actions/version@master
       with:
         cargo: true
-        nightly: master, develop
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Install build dependencies
-      uses: divvun/actions/pahkat/init@develop
+      uses: divvun/actions/pahkat/init@master
       with:
         repo: https://pahkat.uit.no/devtools/
         channel: nightly
@@ -46,12 +40,12 @@ jobs:
         cp $env:RUNNER_WORKSPACE\pahkat-prefix\pkg\spelli\bin\spelli.exe artifacts\
     - name: Build installer
       id: installer
-      uses: divvun/actions/inno-setup@develop
+      uses: divvun/actions/inno-setup@master
       with:
         path: install.iss
         defines: Version=${{ steps.version.outputs.version }}
     - name: Deploy
-      uses: divvun/actions/deploy@develop
+      uses: divvun/actions/deploy@master
       with:
         package-id: windivvun
         platform: windows
@@ -100,7 +94,7 @@ jobs:
         RUSTC_BOOTSTRAP: 1
         SENTRY_DSN: ${{ secrets.MSO_DSN }}
     - name: Code sign
-      uses: divvun/actions/codesign@develop
+      uses: divvun/actions/codesign@master
       with:
         path: target/${{ matrix.triple }}/release/divvunspellmso.dll
     - name: Upload divvunspell-mso (${{ matrix.arch }})
@@ -141,7 +135,7 @@ jobs:
       env:
         RUSTC_BOOTSTRAP: 1
     - name: Code sign
-      uses: divvun/actions/codesign@develop
+      uses: divvun/actions/codesign@master
       with:
         path: target/${{ matrix.triple }}/release/windivvun.dll
     - name: Upload windivvun (${{ matrix.arch }})
