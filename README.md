@@ -2,7 +2,7 @@
 
 The speller service for Windows.
 
-[![Build Status](https://dev.azure.com/divvun/divvun-service/_apis/build/status/divvun.windivvun-service?branchName=master)](https://dev.azure.com/divvun/divvun-service/_build/latest?definitionId=2&branchName=master)
+[![Build Status](https://github.com/divvun/windivvun-service/workflows/windivvun/badge.svg)](https://github.com/divvun/windivvun-service/actions)
 
 ## Compile
 
