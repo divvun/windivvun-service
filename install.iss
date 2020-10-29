@@ -80,12 +80,14 @@ Root: HKLM32; Subkey: "SOFTWARE\Classes\CLSID\{#Clsid}\InProcServer32"; ValueNam
 function GetOldNsisUninstallString: String;
 var
   sUnInstPath: String;
-  sUnInstallString: String;
-begin
-  sUnInstPath := 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{#OldNsisWinDivvunUuid}';
-  sUnInstallString := '';
+  sUnInstPathWow64: String;
+  sUnInstallString: String;                                             
+begin                  
+  sUnInstPathWow64 := 'Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\{#StringChange(OldNsisWinDivvunUuid, '{{', '{')}';
+  sUnInstPath := 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{#StringChange(OldNsisWinDivvunUuid, '{{', '{')}';
+  sUnInstallString := '';          
   if not RegQueryStringValue(HKLM, sUnInstPath, 'UninstallString', sUnInstallString) then
-    RegQueryStringValue(HKCU, sUnInstPath, 'UninstallString', sUnInstallString);
+    RegQueryStringValue(HKLM, sUnInstPathWow64, 'UninstallString', sUnInstallString);
   Result := sUnInstallString;
 end;
 
