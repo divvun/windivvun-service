@@ -20,7 +20,7 @@ use crate::spellcheckprovider::{IEnumSpellingError, ISpellCheckProvider, ISpellC
 
 use com_impl::{implementation, interface, ComInterface};
 
-use divvunspell::archive::{SpellerArchive, ZipSpellerArchive};
+use divvunspell::archive::{self, SpellerArchive};
 
 use std::collections::HashMap;
 
@@ -43,7 +43,7 @@ ENUM! {enum WORDLIST_TYPE {
 pub struct DivvunSpellCheckProvider {
     refs: AtomicU32,
     language_tag: String,
-    speller_archive: Arc<ZipSpellerArchive>,
+    speller_archive: Arc<dyn SpellerArchive + Send + Sync>,
     speller_cache: Arc<SpellerCache>,
     wordlists: Arc<Wordlists>,
 }
@@ -244,12 +244,12 @@ impl DivvunSpellCheckProvider {
 impl DivvunSpellCheckProvider {
     pub fn new(language_tag: &str) -> Option<*mut DivvunSpellCheckProvider> {
         let archive_path = SPELLER_REPOSITORY.get_speller_archive(language_tag)?;
-        let archive_path = archive_path.to_str()?;
-        let archive_path = archive_path.to_string();
+        // let archive_path = archive_path.to_str()?;
+        // let archive_path = archive_path.to_string();
 
-        info!("Instantiating speller {} at {}", language_tag, archive_path);
+        info!("Instantiating speller {} at {}", language_tag, archive_path.display());
 
-        let archive = match ZipSpellerArchive::open(&Path::new(&archive_path)) {
+        let archive = match archive::open(&archive_path) {
             Ok(v) => v,
             Err(err) => {
                 error!("failed to load speller archive: {:?}", err);
@@ -262,7 +262,7 @@ impl DivvunSpellCheckProvider {
             refs: AtomicU32::new(1),
             language_tag: language_tag.to_string(),
             speller_cache: SpellerCache::new(archive.speller()),
-            speller_archive: Arc::new(archive),
+            speller_archive: archive,
             wordlists: Wordlists::new(),
         };
 

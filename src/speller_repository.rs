@@ -39,7 +39,7 @@ pub struct SpellerRepository {
     base_directories: Vec<String>,
 }
 
-fn find_zhfsts(dir: &Path) -> Vec<PathBuf> {
+fn find_speller_bundles(dir: &Path) -> Vec<PathBuf> {
     let mut results: Vec<PathBuf> = vec![];
 
     fn visit_dirs(dir: &Path, results: &mut Vec<PathBuf>) -> io::Result<()> {
@@ -51,7 +51,7 @@ fn find_zhfsts(dir: &Path) -> Vec<PathBuf> {
                     visit_dirs(&path, results)?;
                 } else {
                     if let Some(ext) = path.extension() {
-                        if ext == "zhfst" {
+                        if ext == "zhfst" || ext == "bhfst" {
                             results.push(path.to_owned());
                         }
                     }
@@ -78,21 +78,8 @@ impl SpellerRepository {
         self.base_directories
             .iter()
             .flat_map(|base_directory| {
-                // let path: PathBuf = [base_directory, "**/*.zhfst"].iter().collect();
                 info!("Enumerate dictionaries in {:?}", base_directory);
-
-                // glob_with(
-                //     path.to_str().unwrap(),
-                //     &MatchOptions {
-                //         case_sensitive: false,
-                //         require_literal_leading_dot: false,
-                //         require_literal_separator: false,
-                //     },
-                // )
-                // .map(|paths|
-                //     paths.inspect(|p| info!("path: {:?}", p)).filter_map(|i| i.ok()))
-                // .unwrap()
-                find_zhfsts(&Path::new(base_directory))
+                find_speller_bundles(&Path::new(base_directory))
             })
             .collect()
     }
@@ -114,7 +101,7 @@ impl SpellerRepository {
     }
 
     pub fn get_speller_archive(&self, language_tag: &str) -> Option<PathBuf> {
-        info!("Resolve supported languages");
+        info!("Get speller archive");
         for path in self.get_speller_archives() {
             let tag_name = path
                 .file_stem()
