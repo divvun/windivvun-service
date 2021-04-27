@@ -1,4 +1,9 @@
-#![allow(non_camel_case_types, non_snake_case, unused, clippy::unreadable_literal)]
+#![allow(
+    non_camel_case_types,
+    non_snake_case,
+    unused,
+    clippy::unreadable_literal
+)]
 
 use winapi::shared::guiddef::GUID;
 use winapi::shared::minwindef::UINT;

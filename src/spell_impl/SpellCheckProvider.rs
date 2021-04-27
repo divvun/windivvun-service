@@ -247,7 +247,11 @@ impl DivvunSpellCheckProvider {
         // let archive_path = archive_path.to_str()?;
         // let archive_path = archive_path.to_string();
 
-        info!("Instantiating speller {} at {}", language_tag, archive_path.display());
+        info!(
+            "Instantiating speller {} at {}",
+            language_tag,
+            archive_path.display()
+        );
 
         let archive = match archive::open(&archive_path) {
             Ok(v) => v,
