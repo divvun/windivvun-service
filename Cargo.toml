@@ -1,7 +1,7 @@
 [package]
 name = "windivvun"
 description = "Windows spell checking service for DivvunSpell spellers"
-version = "1.4.1"
+version = "1.4.2"
 authors = [
     "Eike Siewertsen <eike@technocreatives.com>",
     "Brendan Molloy <brendan@bbqsrc.net>",
