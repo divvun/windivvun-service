@@ -37,7 +37,9 @@ tasks:
           name: Decision task
           description: ''
           owner: ${event.sender.login}@users.noreply.github.com
-          source: ${event.repository.url}
+          source: ${event.compare}
+        tags:
+          git_ref: ${event.ref}
         projectId: "divvun"
         taskQueueId: divvun/linux
         deadline:
