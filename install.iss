@@ -52,11 +52,11 @@ Name: "turkish"; MessagesFile: "compiler:Languages\Turkish.isl"
 Name: "ukrainian"; MessagesFile: "compiler:Languages\Ukrainian.isl"
 
 [Files]
-Source: "artifacts\spelli.exe"; DestDir: "{app}\i686\"; Flags: ignoreversion recursesubdirs uninsrestartdelete
-Source: "artifacts\divvunspell-mso-i686\divvunspellmso.dll"; DestDir: "{app}\i686\"; Flags: ignoreversion recursesubdirs uninsrestartdelete
-Source: "artifacts\divvunspell-mso-x86_64\divvunspellmso.dll"; DestDir: "{app}\x86_64\"; Flags: ignoreversion recursesubdirs uninsrestartdelete
-Source: "artifacts\windivvun-i686\windivvun.dll"; DestDir: "{app}\i686\"; Flags: ignoreversion recursesubdirs uninsrestartdelete
-Source: "artifacts\windivvun-x86_64\windivvun.dll"; DestDir: "{app}\x86_64\"; Flags: ignoreversion recursesubdirs uninsrestartdelete
+Source: "artifacts\spelli.exe"; DestDir: "{app}\i686\"; Flags: ignoreversion recursesubdirs uninsrestartdelete restartreplace
+Source: "artifacts\divvunspell-mso-i686\divvunspellmso.dll"; DestDir: "{app}\i686\"; Flags: ignoreversion recursesubdirs uninsrestartdelete restartreplace
+Source: "artifacts\divvunspell-mso-x86_64\divvunspellmso.dll"; DestDir: "{app}\x86_64\"; Flags: ignoreversion recursesubdirs uninsrestartdelete restartreplace
+Source: "artifacts\windivvun-i686\windivvun.dll"; DestDir: "{app}\i686\"; Flags: ignoreversion recursesubdirs uninsrestartdelete restartreplace
+Source: "artifacts\windivvun-x86_64\windivvun.dll"; DestDir: "{app}\x86_64\"; Flags: ignoreversion recursesubdirs uninsrestartdelete restartreplace
 
 [Dirs]
 Name: "{app}\Spellers"
